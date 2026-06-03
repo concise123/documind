@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
       layout:decorate="~{layout/basic.html}">
 <head>
     <title>Home</title>
 </head>
 <div layout:fragment="content">
     <h1 th:text="${msg}"></h1>
+    <div sec:authorize="isAnonymous()">
+        <a th:href="@{/user/signup}">회원가입</a>
+    </div>
 </div>
 <script layout:fragment="script" th:inline="javascript">
     console.log("home");
