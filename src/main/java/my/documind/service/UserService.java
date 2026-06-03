@@ -30,18 +30,4 @@ public class UserService {
         log.info(user);
         userRepository.save(user);
     }
-
-    public User login(UserLoginDTO userLoginDTO) {
-        User user = userRepository.findByEmail(userLoginDTO.getEmail())
-                .orElseThrow(() ->
-                        new IllegalArgumentException(ErrorMessage.USER_NOT_FOUND.getMessage()));
-
-        if (!passwordEncoder.matches(
-                userLoginDTO.getPassword(),
-                user.getPassword()
-        )) {
-            throw new IllegalArgumentException(ErrorMessage.INVALID_PASSWORD.getMessage());
-        }
-        return user;
-    }
 }

@@ -45,25 +45,4 @@ public class UserController {
     public void LoginGET() throws IOException {
         log.info("----------Login get----------");
     }
-
-    @PostMapping("/login")
-    public String LoginPOST(UserLoginDTO userLoginDTO, HttpSession session, RedirectAttributes redirectAttributes) {
-        log.info("----------Login post----------");
-        log.info(userLoginDTO);
-        try {
-            User user = userService.login(userLoginDTO);
-            session.setAttribute("nickname", user.getNickname());
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/user/login";
-        }
-        redirectAttributes.addFlashAttribute("result", "success");
-        return "redirect:/";
-    }
-
-    @PostMapping("/logout")
-    public String LogoutPOST(HttpSession session) {
-        session.invalidate();
-        return "redirect:/";
-    }
 }
