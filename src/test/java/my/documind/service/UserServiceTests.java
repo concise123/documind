@@ -2,6 +2,7 @@ package my.documind.service;
 
 import my.documind.common.exception.ErrorMessage;
 import my.documind.domain.User;
+import my.documind.dto.UserLoginDTO;
 import my.documind.dto.UserSignupDTO;
 import my.documind.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -11,9 +12,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -21,6 +26,9 @@ import static org.mockito.Mockito.*;
 public class UserServiceTests {
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -37,6 +45,9 @@ public class UserServiceTests {
         when(userRepository.existsByEmail(userSignupDTO.getEmail()))
                 .thenReturn(false);
 
+        when(passwordEncoder.encode(userSignupDTO.getPassword()))
+                .thenReturn("encodedPassword");
+
         userService.signup(userSignupDTO);
 
         ArgumentCaptor<User> captor =
@@ -47,7 +58,7 @@ public class UserServiceTests {
         User savedUser = captor.getValue();
 
         assertThat(savedUser.getPassword())
-                .isEqualTo("password");
+                .isEqualTo("encodedPassword");
 
         assertThat(savedUser.getEmail())
                 .isEqualTo("test@test.com");
@@ -77,5 +88,93 @@ public class UserServiceTests {
 
         verify(userRepository, never())
                 .save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("로그인 성공")
+    void login_success() {
+        UserLoginDTO userLoginDTO =
+                UserLoginDTO.builder()
+                        .email("test@test.com")
+                        .password("password")
+                        .build();
+
+        User user = User.builder()
+                .email(userLoginDTO.getEmail())
+                .password("encodedPassword")
+                .build();
+
+        when(userRepository.findByEmail(userLoginDTO.getEmail()))
+                .thenReturn(Optional.of(user));
+
+        when(passwordEncoder.matches(
+                userLoginDTO.getPassword(),
+                user.getPassword()
+        )).thenReturn(true);
+
+        userService.login(userLoginDTO);
+
+        verify(userRepository).findByEmail(userLoginDTO.getEmail());
+
+        verify(passwordEncoder)
+                .matches(
+                        userLoginDTO.getPassword(),
+                        user.getPassword()
+                );
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 이메일 로그인 실패")
+    void login_fail_user_not_found() {
+        UserLoginDTO userLoginDTO =
+                UserLoginDTO.builder()
+                        .email("notfound@test.com")
+                        .password("password")
+                        .build();
+
+        when(userRepository.findByEmail(userLoginDTO.getEmail()))
+                .thenReturn(Optional.empty());
+
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> userService.login(userLoginDTO)
+                );
+
+        assertThat(exception.getMessage())
+                .isEqualTo(ErrorMessage.USER_NOT_FOUND.getMessage());
+
+        verify(userRepository)
+                .findByEmail(userLoginDTO.getEmail());
+
+        verifyNoInteractions(passwordEncoder);
+    }
+
+    @Test
+    @DisplayName("비밀번호 불일치 로그인 실패")
+    void login_fail_wrong_password() {
+        UserLoginDTO userLoginDTO =
+                UserLoginDTO.builder()
+                        .email("test@test.com")
+                        .password("wrong")
+                        .build();
+
+        User user = User.builder()
+                .email(userLoginDTO.getEmail())
+                .password("encodedPassword")
+                .build();
+
+        when(userRepository.findByEmail(userLoginDTO.getEmail()))
+                .thenReturn(Optional.of(user));
+
+        when(passwordEncoder.matches(
+                userLoginDTO.getPassword(),
+                user.getPassword()
+        )).thenReturn(false);
+
+        assertThatThrownBy(() ->
+                userService.login(userLoginDTO))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(ErrorMessage.INVALID_PASSWORD.getMessage());
     }
 }

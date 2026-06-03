@@ -15,7 +15,7 @@
                     회원가입
                 </div>
                 <div class="card-body">
-                    <form id="registerForm" action="/user/signup" method="post">
+                    <form id="registerForm" th:action="@{/user/signup}" method="post">
                         <div class="input-group mb-3">
                             <span class="input-group-text">아이디</span>
                             <input type="text" name="id" class="form-control">

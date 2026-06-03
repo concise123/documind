@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>로그인</title>
+    <!-- Favicon-->
+    <link rel="icon" type="image/x-icon" th:href="@{/assets/favicon.ico}" />
+    <!-- Core theme CSS (includes Bootstrap)-->
+    <link th:href="@{/css/styles.css}" rel="stylesheet" />
+</head>
+<body class="align-middle" >
+<div class="container-fluid d-flex justify-content-center" style="height: 100vh">
+    <div class="card align-self-center">
+        <div class="card-header">
+            로그인
+        </div>
+        <div class="card-body">
+            <th:block th:if="${param.logout != null}">
+                <h1>로그아웃</h1>
+            </th:block>
+            <form id="registerForm" th:action="@{/user/login}" method="post">
+                <div class="mb-3">
+                    <input type="text" name="email" class="form-control" placeholder="이메일">
+                </div>
+                <div class="mb-3">
+                    <input type="password" name="password" class="form-control" placeholder="비밀번호">
+                </div>
+                <div class="mb-3">
+                    <div class="float-end">
+                        <button type="submit" class="btn btn-primary submitBtn">로그인</button>
+                    </div>
+                </div>
+            </form>
+            <div class="my-4">
+                <a th:href="@{/user/signup}">회원가입</a>
+            </div>
+        </div><!--end card body-->
+    </div><!--end card-->
+</div>
+</body>
+<script th:inline="javascript">
+    const errorMessage = [[${errorMessage}]];
+    if (errorMessage){
+        alert(errorMessage);
+    }
+</script>
+</html>
