@@ -15,7 +15,7 @@
                     회원가입
                 </div>
                 <div class="card-body">
-                    <form id="registerForm" th:action="@{/user/signup}" th:object="${userSignupDTO}" method="post">
+                    <form id="registerForm" th:action="@{/user/signup}" th:object="${userSignupRequest}" method="post">
                         <div class="input-group mb-3">
                             <span class="input-group-text">이메일</span>
                             <input type="email" th:field="*{email}" name="email" required maxlength="255" class="form-control">

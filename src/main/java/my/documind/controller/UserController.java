@@ -1,12 +1,9 @@
 package my.documind.controller;
 
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import my.documind.domain.User;
-import my.documind.dto.UserLoginDTO;
-import my.documind.dto.UserSignupDTO;
+import my.documind.dto.UserSignupRequest;
 import my.documind.service.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,19 +25,19 @@ public class UserController {
     @GetMapping("/signup")
     public String signupGET(Model model) {
         log.info("----------signup get----------");
-        model.addAttribute("userSignupDTO", new UserSignupDTO());
+        model.addAttribute("userSignupRequest", new UserSignupRequest());
         return "user/signup";
     }
 
     @PostMapping("/signup")
-    public String signupPOST(@Valid UserSignupDTO userSignupDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+    public String signupPOST(@Valid UserSignupRequest userSignupRequest, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         log.info("----------signup post----------");
-        log.info(userSignupDTO);
+        log.info(userSignupRequest);
         if (bindingResult.hasErrors()) {
             return "user/signup";
         }
         try {
-            userService.signup(userSignupDTO);
+            userService.signup(userSignupRequest);
         } catch (IllegalArgumentException e) {
             bindingResult.rejectValue(
                     "email",

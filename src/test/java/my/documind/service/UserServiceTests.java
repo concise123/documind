@@ -2,7 +2,7 @@ package my.documind.service;
 
 import my.documind.common.exception.ErrorMessage;
 import my.documind.domain.User;
-import my.documind.dto.UserSignupDTO;
+import my.documind.dto.UserSignupRequest;
 import my.documind.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,19 +32,19 @@ public class UserServiceTests {
     @Test
     @DisplayName("회원가입 성공")
     void signup_success() {
-        UserSignupDTO userSignupDTO = UserSignupDTO.builder()
+        UserSignupRequest userSignupRequest = UserSignupRequest.builder()
                 .password("password")
                 .email("test@test.com")
                 .nickname("tester")
                 .build();
 
-        when(userRepository.existsByEmail(userSignupDTO.getEmail()))
+        when(userRepository.existsByEmail(userSignupRequest.getEmail()))
                 .thenReturn(false);
 
-        when(passwordEncoder.encode(userSignupDTO.getPassword()))
+        when(passwordEncoder.encode(userSignupRequest.getPassword()))
                 .thenReturn("encodedPassword");
 
-        userService.signup(userSignupDTO);
+        userService.signup(userSignupRequest);
 
         ArgumentCaptor<User> captor =
                 ArgumentCaptor.forClass(User.class);
@@ -68,17 +68,17 @@ public class UserServiceTests {
     @Test
     @DisplayName("중복 이메일 회원가입 실패")
     void signup_duplicate_email() {
-        UserSignupDTO userSignupDTO = UserSignupDTO.builder()
+        UserSignupRequest userSignupRequest = UserSignupRequest.builder()
                 .password("password")
                 .email("test@test.com")
                 .nickname("tester")
                 .build();
 
-        when(userRepository.existsByEmail(userSignupDTO.getEmail()))
+        when(userRepository.existsByEmail(userSignupRequest.getEmail()))
                 .thenReturn(true);
 
         assertThatThrownBy(() ->
-                userService.signup(userSignupDTO))
+                userService.signup(userSignupRequest))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(ErrorMessage.EMAIL_ALREADY_EXISTS.getMessage());
 
