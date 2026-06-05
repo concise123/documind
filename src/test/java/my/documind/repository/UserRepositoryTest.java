@@ -32,8 +32,8 @@ public class UserRepositoryTest {
     public void testSelect() {
         Long id = 1L;
         Optional<User> result = userRepository.findById(id);
-        User board = result.orElseThrow();
-        log.info(board);
+        User user = result.orElseThrow();
+        log.info(user);
     }
 
     @Test
@@ -41,10 +41,10 @@ public class UserRepositoryTest {
     public void testUpdate() {
         Long id = 1L;
         Optional<User> result = userRepository.findById(id);
-        User board = result.orElseThrow();
-        board.changeNickname("tester2");
-        userRepository.save(board);
-        log.info(board);
+        User user = result.orElseThrow();
+        user.changeNickname("tester2");
+        userRepository.save(user);
+        log.info(user);
     }
 
     @Test

@@ -15,27 +15,25 @@
                     회원가입
                 </div>
                 <div class="card-body">
-                    <form id="registerForm" th:action="@{/user/signup}" method="post">
+                    <form id="registerForm" th:action="@{/user/signup}" th:object="${userSignupRequest}" method="post">
                         <div class="input-group mb-3">
-                            <span class="input-group-text">아이디</span>
-                            <input type="text" name="id" class="form-control">
+                            <span class="input-group-text">이메일</span>
+                            <input type="email" th:field="*{email}" name="email" required maxlength="255" class="form-control">
+                            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
                         </div>
                         <div class="input-group mb-3">
                             <span class="input-group-text">비밀번호</span>
-                            <input type="text" name="password" class="form-control">
-                        </div>
-                        <div class="input-group mb-3">
-                            <span class="input-group-text">이메일</span>
-                            <input type="email" name="email" class="form-control">
+                            <input type="text" th:field="*{password}" name="password" required minlength="4" maxlength="20" class="form-control">
+                            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
                         </div>
                         <div class="input-group mb-3">
                             <span class="input-group-text">닉네임</span>
-                            <input type="text" name="nickname" class="form-control">
+                            <input type="text" th:field="*{nickname}" name="nickname" required minlength="2" maxlength="20" class="form-control">
+                            <div th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}"></div>
                         </div>
                         <div class="my-4">
                             <div class="float-end">
                                 <button type="submit" class="btn btn-primary submitBtn">가입</button>
-                                <button type="reset" class="btn btn-secondary">초기화</button>
                             </div>
                         </div>
                     </form>
@@ -44,10 +42,3 @@
         </div>
     </div>
 </div>
-
-<script layout:fragment="script" th:inline="javascript">
-    const errorMessage = [[${errorMessage}]];
-    if (errorMessage){
-        alert(errorMessage);
-    }
-</script>
