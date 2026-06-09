@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/basic.html}">
+<head>
+    <title>문서 조회</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="row mt-3">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    문서 조회
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>파일명</th>
+                            <th>파일 타입</th>
+                            <th>파일 크기(Byte)</th>
+                            <th>삭제</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(documents)}">
+                            <td colspan="5">
+                                업로드된 문서가 없습니다.
+                            </td>
+                        </tr>
+                        <tr th:each="document : ${documents}">
+                            <td th:text="${document.id}"></td>
+                            <td th:text="${document.originalFilename}"></td>
+                            <td th:text="${document.contentType}"></td>
+                            <td th:text="${document.fileSize}"></td>
+                            <td>
+                                <form th:action="@{/document/delete/{id}(id=${document.id})}" method="post">
+                                    <button type="submit" class="btn btn-primary">삭제</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div><!--end card body-->
+            </div><!--end card-->
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="script" th:inline="javascript">
+    const result = [[${result}]];
+    const action = [[${action}]];
+    const errorMessage = [[${errorMessage}]];
+    if (result === "success") {
+        if (action === "upload") {
+            alert("문서가 업로드되었습니다.");
+        } else if (action === "delete") {
+            alert("문서가 삭제되었습니다.");
+        }
+    } else if (errorMessage) {
+        alert(errorMessage);
+    }
+</script>

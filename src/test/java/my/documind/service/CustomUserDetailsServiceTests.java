@@ -1,7 +1,7 @@
 package my.documind.service;
 
+import my.documind.common.exception.ErrorMessage;
 import my.documind.domain.User;
-import my.documind.repository.UserRepository;
 import my.documind.security.CustomUserDetailsService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,8 +12,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
@@ -21,7 +19,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class CustomUserDetailsServiceTests {
     @Mock
-    private UserRepository userRepository;
+    private UserService userService;
 
     @InjectMocks
     private CustomUserDetailsService customUserDetailsService;
@@ -36,8 +34,8 @@ public class CustomUserDetailsServiceTests {
                 .password("encodedPassword")
                 .build();
 
-        when(userRepository.findByEmail(email))
-                .thenReturn(Optional.of(user));
+        when(userService.getByEmail(email))
+                .thenReturn(user);
 
         UserDetails userDetails =
                 customUserDetailsService.loadUserByUsername(email);
@@ -51,8 +49,8 @@ public class CustomUserDetailsServiceTests {
     void login_fail_user_not_found() {
         String email = "notfound@test.com";
 
-        when(userRepository.findByEmail(email))
-                .thenReturn(Optional.empty());
+        when(userService.getByEmail(email))
+                .thenThrow(new UsernameNotFoundException(ErrorMessage.USER_NOT_FOUND.getMessage()));
 
         assertThatThrownBy(() -> customUserDetailsService.loadUserByUsername(email))
                 .isInstanceOf(UsernameNotFoundException.class);
