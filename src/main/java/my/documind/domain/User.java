@@ -3,12 +3,15 @@ package my.documind.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
+@ToString(exclude = "documents")
 @Table(name = "users")
 public class User extends BaseEntity {
     @Id
@@ -23,6 +26,10 @@ public class User extends BaseEntity {
 
     @Column(nullable = false, length = 20)
     private String nickname;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Document> documents = new ArrayList<>();
 
     public void changePassword(String password) {
         this.password = password;
