@@ -2,7 +2,9 @@ package my.documind.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.DocumentNotFoundException;
+import my.documind.common.exception.FileEmptyException;
+import my.documind.common.exception.InvalidFileException;
 import my.documind.domain.Document;
 import my.documind.domain.User;
 import my.documind.dto.DocumentResponse;
@@ -44,17 +46,17 @@ public class DocumentService {
 
     private void validateFile(MultipartFile file) {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException(ErrorMessage.FILE_EMPTY.getMessage());
+            throw new FileEmptyException();
         }
 
         String filename = file.getOriginalFilename();
 
         if (filename == null || !filename.toLowerCase().endsWith(".pdf")) {
-            throw new IllegalArgumentException(ErrorMessage.INVALID_FILE_TYPE.getMessage());
+            throw new InvalidFileException();
         }
 
         if (!"application/pdf".equals(file.getContentType())) {
-            throw new IllegalArgumentException(ErrorMessage.INVALID_FILE_TYPE.getMessage());
+            throw new InvalidFileException();
         }
     }
 
@@ -62,7 +64,7 @@ public class DocumentService {
     public void delete(Long id, String email) {
         User user = userService.getByEmail(email);
         Document document = documentRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new IllegalArgumentException(ErrorMessage.DOCUMENT_NOT_FOUND.getMessage()));
+                .orElseThrow(DocumentNotFoundException::new);
         fileStorageService.delete(document.getStoredFilename());
         documentRepository.delete(document);
     }

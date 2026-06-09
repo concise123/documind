@@ -29,12 +29,7 @@ public class DocumentController {
     public String uploadPOST(@RequestParam List<MultipartFile> files, @AuthenticationPrincipal UserDetails userDetails,
                              RedirectAttributes redirectAttributes) {
         log.info("----------upload post----------");
-        try {
-            documentService.upload(files, userDetails.getUsername());
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/document/upload";
-        }
+        documentService.upload(files, userDetails.getUsername());
         redirectAttributes.addFlashAttribute("result", "success");
         redirectAttributes.addFlashAttribute("action", "upload");
         return "redirect:/document/list";
@@ -44,12 +39,7 @@ public class DocumentController {
     public String delete(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails,
                          RedirectAttributes redirectAttributes) {
         log.info("----------delete----------");
-        try {
-            documentService.delete(id, userDetails.getUsername());
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/document/list";
-        }
+        documentService.delete(id, userDetails.getUsername());
         redirectAttributes.addFlashAttribute("result", "success");
         redirectAttributes.addFlashAttribute("action", "delete");
         return "redirect:/document/list";

@@ -1,6 +1,7 @@
 package my.documind.service;
 
 import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.FileStorageException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,7 +30,7 @@ public class LocalFileStorageService implements FileStorageService {
             file.transferTo(path);
             return storedFilename;
         } catch (IOException e) {
-            throw new IllegalArgumentException(ErrorMessage.FILE_SAVE_FAILED.getMessage(), e);
+            throw new FileStorageException(ErrorMessage.FILE_SAVE_FAILED.getMessage(), e);
         }
     }
 
@@ -38,7 +39,7 @@ public class LocalFileStorageService implements FileStorageService {
         try {
             Files.deleteIfExists(Paths.get(uploadDir, storedFilename));
         } catch (IOException e) {
-            throw new IllegalArgumentException(ErrorMessage.FILE_DELETE_FAILED.getMessage(), e);
+            throw new FileStorageException(ErrorMessage.FILE_DELETE_FAILED.getMessage(), e);
         }
     }
 }
