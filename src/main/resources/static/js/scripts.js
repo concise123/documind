@@ -24,3 +24,13 @@ window.addEventListener('DOMContentLoaded', event => {
     }
 
 });
+
+function hideErrorOnInput(inputSelector, errorSelector, listenerType) {
+    const input = document.querySelector(inputSelector);
+    const error = document.querySelector(errorSelector);
+    if (input && error) {
+        input.addEventListener(listenerType, function () {
+            error.style.display = "none";
+        });
+    }
+}

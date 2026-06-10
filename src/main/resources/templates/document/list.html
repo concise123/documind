@@ -63,11 +63,11 @@
                 <form th:action="@{/document/upload}" method="post" enctype="multipart/form-data">
                 <div class="modal-body">
                     <div class="input-group mb-3">
-                        <input type="file" name="files" class="form-control" multiple>
+                        <input type="file" name="files" class="form-control" id="uploadFile" multiple>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <div th:if="${uploadErrorMessage}">
+                    <div th:if="${uploadErrorMessage}" id="uploadError">
                         <span>*</span>
                         <span th:text="${uploadErrorMessage}"></span>
                     </div>
@@ -100,4 +100,5 @@
     if (reopenUploadModal) {
         uploadModal.show();
     }
+    hideErrorOnInput("#uploadFile", "#uploadError", "change");
 </script>
