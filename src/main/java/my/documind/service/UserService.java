@@ -2,11 +2,11 @@ package my.documind.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.EmailAlreadyExistsException;
+import my.documind.common.exception.UserNotFoundException;
 import my.documind.domain.User;
 import my.documind.dto.UserSignupRequest;
 import my.documind.repository.UserRepository;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +19,7 @@ public class UserService {
 
     public void signup(UserSignupRequest userSignupRequest) {
         if (userRepository.existsByEmail(userSignupRequest.getEmail())) {
-            throw new IllegalArgumentException(ErrorMessage.EMAIL_ALREADY_EXISTS.getMessage());
+            throw new EmailAlreadyExistsException();
         }
         User user = User.builder()
                 .password(userSignupRequest.getPassword())
@@ -32,7 +32,6 @@ public class UserService {
     }
 
     public User getByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException(ErrorMessage.USER_NOT_FOUND.getMessage()));
+        return userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
     }
 }

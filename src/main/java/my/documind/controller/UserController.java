@@ -3,6 +3,7 @@ package my.documind.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import my.documind.common.exception.EmailAlreadyExistsException;
 import my.documind.dto.UserSignupRequest;
 import my.documind.service.UserService;
 import org.springframework.stereotype.Controller;
@@ -38,7 +39,7 @@ public class UserController {
         }
         try {
             userService.signup(userSignupRequest);
-        } catch (IllegalArgumentException e) {
+        } catch (EmailAlreadyExistsException e) {
             bindingResult.rejectValue(
                     "email",
                     "duplicate",
