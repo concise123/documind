@@ -20,18 +20,12 @@ import java.util.List;
 public class DocumentController {
     private final DocumentService documentService;
 
-    @GetMapping("/upload")
-    public void uploadGET() {
-        log.info("----------upload get----------");
-    }
-
     @PostMapping(value = "/upload")
     public String uploadPOST(@RequestParam List<MultipartFile> files, @AuthenticationPrincipal UserDetails userDetails,
                              RedirectAttributes redirectAttributes) {
         log.info("----------upload post----------");
         documentService.upload(files, userDetails.getUsername());
-        redirectAttributes.addFlashAttribute("result", "success");
-        redirectAttributes.addFlashAttribute("action", "upload");
+        redirectAttributes.addFlashAttribute("message", "문서가 업로드되었습니다.");
         return "redirect:/document/list";
     }
 
@@ -40,8 +34,7 @@ public class DocumentController {
                          RedirectAttributes redirectAttributes) {
         log.info("----------delete----------");
         documentService.delete(id, userDetails.getUsername());
-        redirectAttributes.addFlashAttribute("result", "success");
-        redirectAttributes.addFlashAttribute("action", "delete");
+        redirectAttributes.addFlashAttribute("message", "문서가 삭제되었습니다.");
         return "redirect:/document/list";
     }
 

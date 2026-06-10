@@ -17,20 +17,23 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(FileEmptyException.class)
     public String handleFileEmptyException(FileEmptyException e, RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        return "redirect:/document/upload";
+        redirectAttributes.addFlashAttribute("uploadErrorMessage", e.getMessage());
+        redirectAttributes.addFlashAttribute("reopenUploadModal", true);
+        return "redirect:/document/list";
     }
 
     @ExceptionHandler(FileStorageException.class)
     public String handleFileStorageException(FileStorageException e, RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        return "redirect:/document/upload";
+        redirectAttributes.addFlashAttribute("uploadErrorMessage", e.getMessage());
+        redirectAttributes.addFlashAttribute("reopenUploadModal", true);
+        return "redirect:/document/list";
     }
 
     @ExceptionHandler(InvalidFileException.class)
     public String handleInvalidFileException(InvalidFileException e, RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-        return "redirect:/document/upload";
+        redirectAttributes.addFlashAttribute("uploadErrorMessage", e.getMessage());
+        redirectAttributes.addFlashAttribute("reopenUploadModal", true);
+        return "redirect:/document/list";
     }
 
     @ExceptionHandler(UserNotFoundException.class)
@@ -42,8 +45,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public String handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e,
                                                        RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("errorMessage", ErrorMessage.FILE_SIZE_EXCEEDED.getMessage());
-        return "redirect:/document/upload";
+        redirectAttributes.addFlashAttribute("uploadErrorMessage", ErrorMessage.FILE_SIZE_EXCEEDED.getMessage());
+        redirectAttributes.addFlashAttribute("reopenUploadModal", true);
+        return "redirect:/document/list";
     }
 
     @ExceptionHandler(Exception.class)
