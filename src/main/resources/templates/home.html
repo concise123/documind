@@ -1,15 +1,49 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
       layout:decorate="~{layout/basic.html}">
 <head>
-    <title>Home</title>
+    <title>홈 화면</title>
+    <!-- CSS -->
+    <link th:href="@{/css/home.css}" rel="stylesheet" />
 </head>
 <div layout:fragment="content">
-    <h1 th:text="${msg}"></h1>
-    <div sec:authorize="isAnonymous()">
-        <a th:href="@{/user/signup}">회원가입</a>
+    <div class="mb-4">
+        <h1 class="fw-bold">DocuMind</h1>
+        <p class="text-muted">AI 기반 문서 검색 및 질의응답 서비스</p>
+    </div>
+    <div class="list-group list-group-flush">
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+                <a th:href="@{/document/list}" class="card h-100 shadow-sm feature-card">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">📄</div>
+                        <h5 class="card-title mt-3">문서</h5>
+                        <p class="card-text text-muted">문서를 업로드하고 AI 분석을 시작하세요</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-md-4">
+                <a th:href="@{#!}" class="card h-100 shadow-sm feature-card coming-soon">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">🔍</div>
+                        <h5 class="card-title mt-3">문서 검색</h5>
+                        <p class="card-text text-muted">질문이나 키워드와 가장 관련 있는 문서를 빠르게 찾아줍니다</p>
+                        <span class="badge-soon">Coming Soon</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-md-4">
+                <a th:href="@{#!}" class="card h-100 shadow-sm feature-card coming-soon">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">✨</div>
+                        <h5 class="card-title mt-3">AI 작업공간</h5>
+                        <p class="card-text text-muted">긴 문서를 핵심만 빠르게 요약하세요<br>업로드한 문서에 대해 AI에게 질문하세요</p>
+                        <span class="badge-soon">Coming Soon</span>
+                    </div>
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 <script layout:fragment="script" th:inline="javascript">

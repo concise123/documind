@@ -10901,3 +10901,18 @@ body.sb-sidenav-toggled #sidebarToggle .close-label {
     display: none
   }
 }
+
+.coming-soon {
+  opacity: 0.6;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.badge-soon {
+  margin-left: auto;
+  font-size: 0.7rem;
+  background: rgba(108, 117, 125, 0.15);
+  color: #6c757d;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.5rem;
+}

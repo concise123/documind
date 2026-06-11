@@ -17,17 +17,19 @@
 <div class="d-flex" id="wrapper">
     <!-- Sidebar-->
     <div class="border-end bg-white" id="sidebar-wrapper">
-        <div class="sidebar-heading border-bottom bg-light">Start Bootstrap</div>
-        <div class="list-group list-group-flush" sec:authorize="isAuthenticated()">
-            <a class="list-group-item list-group-item-action list-group-item-light p-3" th:href="@{/document/list}">문서 조회</a>
+        <div class="sidebar-heading border-bottom">
+            <a class="list-group-item" th:href="@{/}">Documind</a>
         </div>
-        <div class="list-group list-group-flush" sec:authorize="isAnonymous()">
-            <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#!">Dashboard</a>
-            <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#!">Shortcuts</a>
-            <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#!">Overview</a>
-            <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#!">Events</a>
-            <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#!">Profile</a>
-            <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#!">Status</a>
+        <div class="list-group list-group-flush">
+            <a class="list-group-item list-group-item-action list-group-item-light p-3" th:href="@{/document/list}">문서</a>
+            <a class="list-group-item list-group-item-action list-group-item-light p-3 coming-soon" th:href="@{/#!}">
+                <span>검색&nbsp;</span>
+                <span class="badge-soon">Coming Soon</span>
+            </a>
+            <a class="list-group-item list-group-item-action list-group-item-light p-3 coming-soon" th:href="@{/#!}">
+                <span>AI 작업공간&nbsp;</span>
+                <span class="badge-soon">Coming Soon</span>
+            </a>
         </div>
     </div>
     <!-- Page content wrapper-->
@@ -42,14 +44,10 @@
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
-                        <li class="nav-item active"><a class="nav-link" href="#!">Home</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#!">Link</a></li>
+                        <li class="nav-item" sec:authorize="isAnonymous()"><a class="nav-link" th:href="@{/user/signup}">회원가입</a></li>
                         <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
                             <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span sec:authentication="name"></span></a>
                             <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item" href="#!">Action</a>
-                                <a class="dropdown-item" href="#!">Another action</a>
-                                <div class="dropdown-divider"></div>
                                 <form th:action="@{/user/logout}" method="post">
                                     <button class="dropdown-item" type="submit">로그아웃</button>
                                 </form>
