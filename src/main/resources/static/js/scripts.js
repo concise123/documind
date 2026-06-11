@@ -19,8 +19,19 @@ window.addEventListener('DOMContentLoaded', event => {
         sidebarToggle.addEventListener('click', event => {
             event.preventDefault();
             document.body.classList.toggle('sb-sidenav-toggled');
-            localStorage.setItem('sb|sidebar-toggle', document.body.classList.contains('sb-sidenav-toggled'));
+            // Uncomment Below to persist sidebar toggle between refreshes
+            // localStorage.setItem('sb|sidebar-toggle', document.body.classList.contains('sb-sidenav-toggled'));
         });
     }
 
 });
+
+function hideErrorOnInput(inputSelector, errorSelector, listenerType) {
+    const input = document.querySelector(inputSelector);
+    const error = document.querySelector(errorSelector);
+    if (input && error) {
+        input.addEventListener(listenerType, function () {
+            error.style.display = "none";
+        });
+    }
+}

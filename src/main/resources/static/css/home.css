@@ -1,0 +1,27 @@
+.feature-card {
+  display: block;
+  text-decoration: none;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: white;
+  border: 1px solid rgba(0,0,0,0.08);
+  transition: 0.2s ease;
+  color: inherit;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+}
+
+.feature-icon {
+  width: 5rem;
+  height: 5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  margin: 0 auto;
+  border-radius: 1rem;
+  background: rgba(13, 110, 253, 0.1);
+}

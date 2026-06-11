@@ -19,17 +19,17 @@
                         <div class="input-group mb-3">
                             <span class="input-group-text">이메일</span>
                             <input type="email" th:field="*{email}" name="email" required maxlength="255" class="form-control">
-                            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" id="emailError"></div>
                         </div>
                         <div class="input-group mb-3">
                             <span class="input-group-text">비밀번호</span>
                             <input type="text" th:field="*{password}" name="password" required minlength="4" maxlength="20" class="form-control">
-                            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" id="passwordError"></div>
                         </div>
                         <div class="input-group mb-3">
                             <span class="input-group-text">닉네임</span>
                             <input type="text" th:field="*{nickname}" name="nickname" required minlength="2" maxlength="20" class="form-control">
-                            <div th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}"></div>
+                            <div th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}" id="nicknameError"></div>
                         </div>
                         <div class="my-4">
                             <div class="float-end">
@@ -42,3 +42,8 @@
         </div>
     </div>
 </div>
+<script layout:fragment="script" th:inline="javascript">
+    hideErrorOnInput("input[name=email]", "#emailError", "input");
+    hideErrorOnInput("input[name=password]", "#passwordError", "input");
+    hideErrorOnInput("input[name=nickname]", "#nicknameError", "input");
+</script>

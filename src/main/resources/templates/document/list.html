@@ -43,23 +43,62 @@
                         </tr>
                         </tbody>
                     </table>
+                    <div class="my-4">
+                        <div class="float-end">
+                            <button class="btn btn-primary" id="uploadFileBtn">업로드</button>
+                        </div>
+                    </div>
                 </div><!--end card body-->
             </div><!--end card-->
+        </div>
+    </div>
+    <!-- 업로드 모달 -->
+    <div class="modal fade uploadModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">PDF 문서 업로드</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/document/upload}" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="input-group mb-3">
+                        <input type="file" name="files" class="form-control" id="uploadFile" multiple>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div th:if="${uploadErrorMessage}" id="uploadError">
+                        <span>*</span>
+                        <span th:text="${uploadErrorMessage}"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary ms-auto submitBtn">업로드</button>
+                </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
 <script layout:fragment="script" th:inline="javascript">
-    const result = [[${result}]];
-    const action = [[${action}]];
-    const errorMessage = [[${errorMessage}]];
-    if (result === "success") {
-        if (action === "upload") {
-            alert("문서가 업로드되었습니다.");
-        } else if (action === "delete") {
-            alert("문서가 삭제되었습니다.");
-        }
-    } else if (errorMessage) {
+    const message = /*[[${message}]]*/ null;
+    const errorMessage = /*[[${errorMessage}]]*/ null;
+    if (message) {
+        alert(message);
+    }
+    if (errorMessage) {
         alert(errorMessage);
     }
+
+    // 업로드 모달
+    const uploadModal = new bootstrap.Modal(document.querySelector(".uploadModal"));
+    const reopenUploadModal = /*[[${reopenUploadModal}]]*/ false;
+    document.querySelector("#uploadFileBtn").addEventListener("click", function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        uploadModal.show();
+    }, false);
+    if (reopenUploadModal) {
+        uploadModal.show();
+    }
+    hideErrorOnInput("#uploadFile", "#uploadError", "change");
 </script>
