@@ -1,7 +1,12 @@
 package my.documind.common.exception;
 
+import lombok.Getter;
+
+@Getter
 public class FileStorageException extends RuntimeException {
-    public FileStorageException(String message, Throwable cause) {
-        super(message, cause);
+    private final ErrorMessage errorMessage;
+    public FileStorageException(ErrorMessage errorMessage, Throwable cause) {
+        super(errorMessage.getMessage(), cause);
+        this.errorMessage = errorMessage;
     }
 }

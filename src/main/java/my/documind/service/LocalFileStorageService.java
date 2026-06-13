@@ -30,7 +30,7 @@ public class LocalFileStorageService implements FileStorageService {
             file.transferTo(path);
             return storedFilename;
         } catch (IOException e) {
-            throw new FileStorageException(ErrorMessage.FILE_SAVE_FAILED.getMessage(), e);
+            throw new FileStorageException(ErrorMessage.FILE_SAVE_FAILED, e);
         }
     }
 
@@ -39,7 +39,7 @@ public class LocalFileStorageService implements FileStorageService {
         try {
             Files.deleteIfExists(Paths.get(uploadDir, storedFilename));
         } catch (IOException e) {
-            throw new FileStorageException(ErrorMessage.FILE_DELETE_FAILED.getMessage(), e);
+            throw new FileStorageException(ErrorMessage.FILE_DELETE_FAILED, e);
         }
     }
 }

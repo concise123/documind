@@ -24,8 +24,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(FileStorageException.class)
     public String handleFileStorageException(FileStorageException e, RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("uploadErrorMessage", e.getMessage());
-        redirectAttributes.addFlashAttribute("reopenUploadModal", true);
+        switch (e.getErrorMessage()) {
+            case FILE_DELETE_FAILED -> {
+                redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            }
+            default -> {
+                redirectAttributes.addFlashAttribute("uploadErrorMessage", e.getMessage());
+                redirectAttributes.addFlashAttribute("reopenUploadModal", true);
+            }
+        }
         return "redirect:/document/list";
     }
 
