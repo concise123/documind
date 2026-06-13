@@ -40,13 +40,13 @@
 </div>
 </body>
 <script th:inline="javascript">
-    const errorMessage = [[${param.error}]];
-    const result = [[${result}]];
-    if (errorMessage){
+    const loginError = [[${param.error}]];
+    const message = /*[[${message}]]*/ null;
+    if (loginError){
         alert("이메일 또는 비밀번호가 올바르지 않습니다.");
     }
-    if (result === "success") {
-        alert("회원가입이 완료되었습니다. 로그인해주세요.");
+    if (message){
+        alert(message);
     }
 </script>
 </html>

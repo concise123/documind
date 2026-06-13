@@ -67,9 +67,9 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <div th:if="${uploadErrorMessage}" id="uploadError">
+                    <div th:if="${reopenUploadModal}" id="uploadError">
                         <span>*</span>
-                        <span th:text="${uploadErrorMessage}"></span>
+                        <span th:text="${message}"></span>
                     </div>
                     <button type="submit" class="btn btn-primary ms-auto submitBtn">업로드</button>
                 </div>
@@ -81,17 +81,11 @@
 
 <script layout:fragment="script" th:inline="javascript">
     const message = /*[[${message}]]*/ null;
-    const errorMessage = /*[[${errorMessage}]]*/ null;
-    if (message) {
-        alert(message);
-    }
-    if (errorMessage) {
-        alert(errorMessage);
-    }
-
-    // 업로드 모달
     const uploadModal = new bootstrap.Modal(document.querySelector(".uploadModal"));
     const reopenUploadModal = /*[[${reopenUploadModal}]]*/ false;
+    if (message && !reopenUploadModal) {
+        alert(message);
+    }
     document.querySelector("#uploadFileBtn").addEventListener("click", function(e) {
         e.stopPropagation();
         e.preventDefault();
