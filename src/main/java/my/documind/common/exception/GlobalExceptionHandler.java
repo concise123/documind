@@ -1,6 +1,8 @@
 package my.documind.common.exception;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -44,7 +46,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UserNotFoundException.class)
-    public String handleUserNotFoundException(UserNotFoundException e, RedirectAttributes redirectAttributes) {
+    public String handleUserNotFoundException(HttpServletRequest request,
+                                              UserNotFoundException e, RedirectAttributes redirectAttributes) {
+        request.getSession().invalidate();
+        SecurityContextHolder.clearContext();
         redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         return "redirect:/user/login";
     }
