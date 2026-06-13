@@ -47,8 +47,8 @@
     </div>
 </div>
 <script layout:fragment="script" th:inline="javascript">
-    const errorMessage = [[${errorMessage}]];
-    if (errorMessage) {
-        alert(errorMessage);
+    const message = [[${message}]];
+    if (message) {
+        alert(message);
     }
 </script>
