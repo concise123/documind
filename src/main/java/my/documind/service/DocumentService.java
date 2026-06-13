@@ -86,9 +86,23 @@ public class DocumentService {
                 .map(document -> DocumentResponse.builder()
                         .id(document.getId())
                         .originalFilename(document.getOriginalFilename())
-                        .contentType(document.getContentType())
                         .fileSize(document.getFileSize())
+                        .regDate(document.getRegDate())
                         .build())
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public DocumentResponse findDocument(Long id, String email) {
+        User user = userService.getByEmail(email);
+        Document document = documentRepository.findByIdAndUser(id, user)
+                .orElseThrow(() -> new DocumentNotFoundException());
+        return DocumentResponse.builder()
+                .id(document.getId())
+                .originalFilename(document.getOriginalFilename())
+                .fileSize(document.getFileSize())
+                .extractedText(document.getExtractedText())
+                .regDate(document.getRegDate())
+                .build();
     }
 }
