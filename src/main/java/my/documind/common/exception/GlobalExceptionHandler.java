@@ -24,8 +24,8 @@ public class GlobalExceptionHandler {
         return "redirect:/document/list";
     }
 
-    @ExceptionHandler(FileStorageException.class)
-    public String handleFileStorageException(FileStorageException e, RedirectAttributes redirectAttributes) {
+    @ExceptionHandler(FileException.class)
+    public String handleFileException(FileException e, RedirectAttributes redirectAttributes) {
         switch (e.getErrorMessage()) {
             case FILE_DELETE_FAILED -> {
                 redirectAttributes.addFlashAttribute("message", e.getMessage());
