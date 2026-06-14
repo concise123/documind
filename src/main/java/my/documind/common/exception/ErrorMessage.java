@@ -17,9 +17,11 @@ public enum ErrorMessage {
     DOCUMENT_NOT_FOUND("문서를 찾을 수 없습니다."),
 
     // system (서버 문제)
+    FILE_READ_FAILED("파일 읽기에 실패했습니다."),
     FILE_SAVE_FAILED("파일 저장에 실패했습니다."),
     FILE_DELETE_FAILED("파일 삭제에 실패했습니다."),
     INTERNAL_SERVER_ERROR("예상치 못한 오류가 발생했습니다."),
+    PDF_TEXT_EXTRACTION_FAILED("텍스트 추출에 실패했습니다."),
     USER_SESSION_INVALID("다시 로그인해 주세요.");
 
     private final String message;

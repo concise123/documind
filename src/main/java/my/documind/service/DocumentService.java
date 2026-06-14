@@ -2,9 +2,7 @@ package my.documind.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import my.documind.common.exception.DocumentNotFoundException;
-import my.documind.common.exception.FileEmptyException;
-import my.documind.common.exception.InvalidFileException;
+import my.documind.common.exception.*;
 import my.documind.domain.Document;
 import my.documind.domain.User;
 import my.documind.dto.DocumentResponse;
@@ -13,8 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Log4j2
@@ -23,6 +23,7 @@ import java.util.List;
 public class DocumentService {
     private final DocumentRepository documentRepository;
     private final FileStorageService fileStorageService;
+    private final PdfTextExtractor pdfTextExtractor;
     private final UserService userService;
 
     @Transactional
@@ -31,6 +32,13 @@ public class DocumentService {
         List<Document> documents = new ArrayList<>();
         for (MultipartFile file : files) {
             validateFile(file);
+            byte[] fileBytes;
+            try {
+                fileBytes = file.getBytes();
+            } catch (IOException e) {
+                throw new FileException(ErrorMessage.FILE_READ_FAILED, e);
+            }
+            String extractedText = Optional.ofNullable(pdfTextExtractor.extractText(fileBytes)).orElse("");
             String storedFilename = fileStorageService.store(file);
             Document document = Document.builder()
                     .originalFilename(file.getOriginalFilename())
@@ -38,6 +46,7 @@ public class DocumentService {
                     .contentType(file.getContentType())
                     .fileSize(file.getSize())
                     .user(user)
+                    .extractedText(extractedText)
                     .build();
             documents.add(document);
         }
@@ -77,9 +86,23 @@ public class DocumentService {
                 .map(document -> DocumentResponse.builder()
                         .id(document.getId())
                         .originalFilename(document.getOriginalFilename())
-                        .contentType(document.getContentType())
                         .fileSize(document.getFileSize())
+                        .regDate(document.getRegDate())
                         .build())
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public DocumentResponse findDocument(Long id, String email) {
+        User user = userService.getByEmail(email);
+        Document document = documentRepository.findByIdAndUser(id, user)
+                .orElseThrow(() -> new DocumentNotFoundException());
+        return DocumentResponse.builder()
+                .id(document.getId())
+                .originalFilename(document.getOriginalFilename())
+                .fileSize(document.getFileSize())
+                .extractedText(document.getExtractedText())
+                .regDate(document.getRegDate())
+                .build();
     }
 }

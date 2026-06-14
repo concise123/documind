@@ -31,12 +31,16 @@ public class Document extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(columnDefinition = "TEXT")
+    private String extractedText;
+
     @Builder
-    public Document(String originalFilename, String storedFilename, String contentType, Long fileSize, User user) {
+    public Document(String originalFilename, String storedFilename, String contentType, Long fileSize, User user, String extractedText) {
         this.originalFilename = originalFilename;
         this.storedFilename = storedFilename;
         this.contentType = contentType;
         this.fileSize = fileSize;
         this.user = user;
+        this.extractedText = extractedText;
     }
 }

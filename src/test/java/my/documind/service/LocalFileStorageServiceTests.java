@@ -1,7 +1,7 @@
 package my.documind.service;
 
 import my.documind.common.exception.ErrorMessage;
-import my.documind.common.exception.FileStorageException;
+import my.documind.common.exception.FileException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ public class LocalFileStorageServiceTests {
         doThrow(new IOException()).when(file).transferTo(any(Path.class));
 
         assertThatThrownBy(() -> fileStorageService.store(file))
-                .isInstanceOf(FileStorageException.class)
+                .isInstanceOf(FileException.class)
                 .hasMessage(ErrorMessage.FILE_SAVE_FAILED.getMessage());
     }
 }

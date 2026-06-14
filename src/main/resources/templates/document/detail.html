@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/basic.html}">
+<head>
+    <title>문서 상세</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="row mt-3">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    문서 상세
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>파일명</th>
+                            <th>파일 크기(Byte)</th>
+                            <th>등록일</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td th:text="${document.id}"></td>
+                            <td th:text="${document.originalFilename}"></td>
+                            <td th:text="${document.fileSize}"></td>
+                            <td th:text="${#temporals.format(document.regDate, 'yyyy-MM-dd')}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <span class="fw-bold d-block mb-2">원문</span>
+                    <textarea class="form-control" rows="20" readonly th:text="${document.extractedText}"></textarea>
+                    <div class="my-4">
+                        <div class="float-end">
+                            <a th:href="@{/document/list}">목록</a>
+                        </div>
+                    </div>
+                </div><!--end card body-->
+            </div><!--end card-->
+        </div>
+    </div>
+</div>

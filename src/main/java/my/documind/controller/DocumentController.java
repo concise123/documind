@@ -43,4 +43,11 @@ public class DocumentController {
         log.info("----------list----------");
         model.addAttribute("documents", documentService.findDocuments(userDetails.getUsername()));
     }
+
+    @GetMapping("/detail/{id}")
+    public String detail(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, Model model) {
+        log.info("----------detail----------");
+        model.addAttribute("document", documentService.findDocument(id, userDetails.getUsername()));
+        return "document/detail";
+    }
 }

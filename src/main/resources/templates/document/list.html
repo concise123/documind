@@ -19,8 +19,8 @@
                         <tr>
                             <th>ID</th>
                             <th>파일명</th>
-                            <th>파일 타입</th>
                             <th>파일 크기(Byte)</th>
+                            <th>등록일</th>
                             <th>삭제</th>
                         </tr>
                         </thead>
@@ -32,9 +32,13 @@
                         </tr>
                         <tr th:each="document : ${documents}">
                             <td th:text="${document.id}"></td>
-                            <td th:text="${document.originalFilename}"></td>
-                            <td th:text="${document.contentType}"></td>
+                            <td>
+                                <a th:href="@{/document/detail/{id}(id=${document.id})}"
+                                   th:text="${document.originalFilename}">
+                                </a>
+                            </td>
                             <td th:text="${document.fileSize}"></td>
+                            <td th:text="${#temporals.format(document.regDate, 'yyyy-MM-dd')}"></td>
                             <td>
                                 <form th:action="@{/document/delete/{id}(id=${document.id})}" method="post">
                                     <button type="submit" class="btn btn-primary">삭제</button>
