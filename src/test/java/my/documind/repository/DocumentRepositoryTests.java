@@ -1,6 +1,7 @@
 package my.documind.repository;
 
 import my.documind.domain.Document;
+import my.documind.domain.DocumentStatus;
 import my.documind.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,7 @@ class DocumentRepositoryTests {
                 .contentType("application/pdf")
                 .fileSize(100L)
                 .user(user)
+                .status(DocumentStatus.UPLOADED)
                 .build();
         documentRepository.save(document);
 
