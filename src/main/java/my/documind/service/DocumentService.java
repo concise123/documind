@@ -112,11 +112,18 @@ public class DocumentService {
         User user = userService.getByEmail(email);
         Document document = documentRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new DocumentNotFoundException());
+        String summary = document.getAiResults().stream()
+                .filter(aiResult -> aiResult.getType() == AiResultType.SUMMARY)
+                .map(DocumentAiResult::getContent)
+                .findFirst()
+                .orElse(null);
         return DocumentResponse.builder()
                 .id(document.getId())
                 .originalFilename(document.getOriginalFilename())
                 .fileSize(document.getFileSize())
+                .status(document.getStatus())
                 .extractedText(document.getExtractedText())
+                .summary(summary)
                 .regDate(document.getRegDate())
                 .build();
     }

@@ -10916,3 +10916,11 @@ body.sb-sidenav-toggled #sidebarToggle .close-label {
   padding: 0.2rem 0.5rem;
   border-radius: 0.5rem;
 }
+
+.nav-tabs .nav-link {
+    color: #6c757d;
+}
+
+.content-panel {
+    height: 23rem;
+}
