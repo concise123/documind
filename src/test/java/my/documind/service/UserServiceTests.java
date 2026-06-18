@@ -1,8 +1,8 @@
 package my.documind.service;
 
-import my.documind.common.exception.EmailAlreadyExistsException;
-import my.documind.common.exception.ErrorMessage;
-import my.documind.common.exception.UserNotFoundException;
+import my.documind.exception.EmailAlreadyExistsException;
+import my.documind.exception.ErrorMessage;
+import my.documind.exception.UserNotFoundException;
 import my.documind.domain.User;
 import my.documind.dto.UserSignupRequest;
 import my.documind.repository.UserRepository;

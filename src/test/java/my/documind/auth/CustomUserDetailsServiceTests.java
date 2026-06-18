@@ -1,8 +1,7 @@
-package my.documind.service;
+package my.documind.auth;
 
 import my.documind.domain.User;
 import my.documind.repository.UserRepository;
-import my.documind.security.CustomUserDetailsService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

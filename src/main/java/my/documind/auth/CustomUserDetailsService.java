@@ -1,8 +1,8 @@
-package my.documind.security;
+package my.documind.auth;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import my.documind.common.exception.ErrorMessage;
+import my.documind.exception.ErrorMessage;
 import my.documind.domain.User;
 import my.documind.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;

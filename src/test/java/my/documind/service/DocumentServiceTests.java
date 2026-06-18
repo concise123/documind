@@ -1,9 +1,9 @@
 package my.documind.service;
 
-import my.documind.common.exception.DocumentNotFoundException;
-import my.documind.common.exception.ErrorMessage;
-import my.documind.common.exception.FileEmptyException;
-import my.documind.common.exception.InvalidFileException;
+import my.documind.exception.DocumentNotFoundException;
+import my.documind.exception.ErrorMessage;
+import my.documind.exception.FileEmptyException;
+import my.documind.exception.InvalidFileException;
 import my.documind.domain.Document;
 import my.documind.domain.DocumentStatus;
 import my.documind.domain.User;

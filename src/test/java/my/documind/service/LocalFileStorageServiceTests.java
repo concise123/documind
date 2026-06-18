@@ -1,7 +1,7 @@
 package my.documind.service;
 
-import my.documind.common.exception.ErrorMessage;
-import my.documind.common.exception.FileException;
+import my.documind.exception.ErrorMessage;
+import my.documind.exception.FileException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

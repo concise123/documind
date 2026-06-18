@@ -1,7 +1,7 @@
 package my.documind.service;
 
-import my.documind.common.exception.ErrorMessage;
-import my.documind.common.exception.FileException;
+import my.documind.exception.ErrorMessage;
+import my.documind.exception.FileException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

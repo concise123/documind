@@ -1,4 +1,4 @@
-package my.documind.common.exception;
+package my.documind.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.log4j.Log4j2;
