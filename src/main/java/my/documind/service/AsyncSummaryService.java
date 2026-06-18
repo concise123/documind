@@ -31,10 +31,12 @@ public class AsyncSummaryService {
             document.fail();
             return;
         }
+        log.info("AI 요약 생성 시작. documentId={}", documentId);
         document.startProcessing();
         try {
             // AI 요약 위임
             SummaryResponse response = summaryService.generateSummary(document);
+            log.info("AI 요약 생성 완료. documentId={}", documentId);
             // AI 결과 저장
             DocumentAiResult aiResult = DocumentAiResult.summary(response);
             document.addAiResult(aiResult);
@@ -42,7 +44,6 @@ public class AsyncSummaryService {
         } catch (Exception e) {
             document.fail();
             log.error("AI 요약 생성 실패. documentId={}", documentId, e);
-
         }
     }
 }

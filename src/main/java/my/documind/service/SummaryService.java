@@ -15,7 +15,11 @@ public class SummaryService {
     private final OpenAiClient openAiClient;
 
     public SummaryResponse generateSummary(Document document) {
-        return openAiClient.summarize(trimToLimit(document.getExtractedText()));
+        Long documentId = document.getId();
+        log.debug("AI 요약 요청. documentId={}", documentId);
+        SummaryResponse response = openAiClient.summarize(trimToLimit(document.getExtractedText()));
+        log.debug("AI 요약 응답 수신. documentId={}", documentId);
+        return response;
     }
 
     /**

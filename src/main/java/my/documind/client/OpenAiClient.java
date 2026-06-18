@@ -17,12 +17,14 @@ public class OpenAiClient {
     private final RestClient restClient;;
 
     public SummaryResponse summarize(String text) {
+        log.info("OpenAI 호출 시작");
         OpenAiRequest request = createRequest(text);
         OpenAiResponse response = restClient.post()
                 .uri("/v1/chat/completions")
                 .body(request)
                 .retrieve()
                 .body(OpenAiResponse.class);
+        log.info("OpenAI 호출 성공");
         return new SummaryResponse(response.getContent(), response.model(), response.usage().totalTokens());
     }
 

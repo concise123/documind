@@ -40,6 +40,7 @@ public class DocumentService {
      */
     @Transactional
     public void upload(List<MultipartFile> files, String email) {
+        log.info("문서 업로드 시작. email={}, fileCount={}", email, files.size());
         User user = userService.getByEmail(email);
         List<Document> documents = new ArrayList<>();
         for (MultipartFile file : files) {
@@ -64,6 +65,7 @@ public class DocumentService {
             documents.add(document);
         }
         List<Document> savedDocuments = documentRepository.saveAll(documents);
+        log.info("문서 업로드 완료. email={}, savedDocumentCount={}", email, savedDocuments.size());
         savedDocuments.forEach(document ->
                 eventPublisher.publishEvent(new DocumentUploadedEvent(document.getId())));
     }
