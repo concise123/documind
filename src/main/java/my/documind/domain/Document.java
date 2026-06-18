@@ -2,13 +2,19 @@ package my.documind.domain;
 
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "documents")
 public class Document extends BaseEntity {
     @Id
@@ -31,16 +37,31 @@ public class Document extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private DocumentStatus status;
+
     @Column(columnDefinition = "TEXT")
     private String extractedText;
 
-    @Builder
-    public Document(String originalFilename, String storedFilename, String contentType, Long fileSize, User user, String extractedText) {
-        this.originalFilename = originalFilename;
-        this.storedFilename = storedFilename;
-        this.contentType = contentType;
-        this.fileSize = fileSize;
-        this.user = user;
-        this.extractedText = extractedText;
+    @Builder.Default
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DocumentAiResult> aiResults = new ArrayList<>();
+
+    public void startProcessing() {
+        this.status = DocumentStatus.PROCESSING;
+    }
+
+    public void complete() {
+        this.status = DocumentStatus.COMPLETED;
+    }
+
+    public void fail() {
+        this.status = DocumentStatus.FAILED;
+    }
+
+    public void addAiResult(DocumentAiResult aiResult) {
+        aiResults.add(aiResult);
+        aiResult.assignDocument(this);
     }
 }
