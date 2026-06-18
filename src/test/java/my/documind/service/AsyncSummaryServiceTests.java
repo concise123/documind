@@ -105,4 +105,15 @@ class AsyncSummaryServiceTests {
         // then
         assertThat(document.getStatus()).isEqualTo(DocumentStatus.FAILED);
     }
+
+    @Test
+    @DisplayName("타임아웃 예외 발생 시 FAILED 상태로 변경된다")
+    void generateSummaryAsync_fail_when_timeout_exception_occurs() {
+        // when
+        when(summaryService.generateSummary(document)).thenThrow(new RuntimeException("timeout"));
+        asyncSummaryService.generateSummaryAsync(event);
+
+        // then
+        assertThat(document.getStatus()).isEqualTo(DocumentStatus.FAILED);
+    }
 }
