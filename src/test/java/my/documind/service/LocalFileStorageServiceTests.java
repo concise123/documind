@@ -36,19 +36,28 @@ public class LocalFileStorageServiceTests {
     }
 
     @Test
-    @DisplayName("파일 저장 성공")
-    void store_success() throws Exception {
-        when(file.getOriginalFilename()).thenReturn("test.pdf");
+    @DisplayName("파일을 저장한다")
+    void shouldStoreFile_whenFileIsValid() throws Exception {
+        // given
+        when(file.getOriginalFilename())
+                .thenReturn("test.pdf");
+
+        // when
         String storedFilename = fileStorageService.store(file);
+
+        // then
         assertThat(storedFilename).endsWith("_test.pdf");
         verify(file).transferTo(any(Path.class));
     }
 
     @Test
-    @DisplayName("파일 저장 실패")
-    void store_failure() throws IOException {
-        doThrow(new IOException()).when(file).transferTo(any(Path.class));
+    @DisplayName("파일 저장에 실패하면 예외를 발생시킨다")
+    void shouldThrowException_whenFileStorageFails() throws IOException {
+        // given
+        doThrow(new IOException())
+                .when(file).transferTo(any(Path.class));
 
+        // when & then
         assertThatThrownBy(() -> fileStorageService.store(file))
                 .isInstanceOf(FileException.class)
                 .hasMessage(ErrorMessage.FILE_SAVE_FAILED.getMessage());

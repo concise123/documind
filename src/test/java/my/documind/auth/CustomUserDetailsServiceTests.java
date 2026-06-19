@@ -26,8 +26,9 @@ public class CustomUserDetailsServiceTests {
     private CustomUserDetailsService customUserDetailsService;
 
     @Test
-    @DisplayName("로그인 성공")
-    void login_success() {
+    @DisplayName("이메일로 인증 정보를 조회한다")
+    void shouldReturnUserDetails_whenEmailExists() {
+        // given
         String email = "test@test.com";
 
         User user = User.builder()
@@ -38,21 +39,24 @@ public class CustomUserDetailsServiceTests {
         when(userRepository.findByEmail(email))
                 .thenReturn(Optional.of(user));
 
-        UserDetails userDetails =
-                customUserDetailsService.loadUserByUsername(email);
+        // when
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
 
+        // then
         assertThat(userDetails.getUsername()).isEqualTo(email);
         assertThat(userDetails.getPassword()).isEqualTo("encodedPassword");
     }
 
     @Test
-    @DisplayName("존재하지 않는 이메일 로그인 실패")
-    void login_fail_user_not_found() {
+    @DisplayName("등록되지 않는 이메일로 인증할 수 없다")
+    void shouldThrowException_whenEmailDoesNotExist() {
+        // given
         String email = "notfound@test.com";
 
         when(userRepository.findByEmail(email))
                 .thenReturn(Optional.empty());
 
+        // when & then
         assertThatThrownBy(() -> customUserDetailsService.loadUserByUsername(email))
                 .isInstanceOf(UsernameNotFoundException.class);
     }

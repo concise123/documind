@@ -25,14 +25,15 @@ class SummaryServiceTests {
     private SummaryService summaryService;
 
     @Test
-    @DisplayName("문서를 AI로 요약하고 결과를 반환한다")
-    void generateSummary_success() {
+    @DisplayName("문서 내용으로 요약 결과를 생성한다")
+    void shouldCreateSummaryResult_whenDocumentContentExists() {
         // given
         Document document = Document.builder()
                 .extractedText("원본 텍스트")
                 .build();
 
-        when(openAiClient.summarize(anyString())).thenReturn(new SummaryResponse("요약 결과", "gpt-4o-mini", 10));
+        when(openAiClient.summarize(anyString()))
+                .thenReturn(new SummaryResponse("요약 결과", "gpt-4o-mini", 10));
 
         // when
         SummaryResponse response = summaryService.generateSummary(document);

@@ -18,10 +18,15 @@ public class PdfTextExtractorTests {
     }
 
     @Test
-    @DisplayName("pdf 텍스트 추출")
-    void extractPdfText() throws Exception {
+    @DisplayName("PDF 파일에서 텍스트를 추출한다")
+    void shouldExtractText_whenFileIsValid() throws Exception {
+        // given
         byte[] pdfBytes = Files.readAllBytes(Path.of("src/test/resources/test.pdf"));
+
+        // when
         String text = pdfTextExtractor.extractText(pdfBytes);
+
+        // then
         assertThat(text).contains("대한");
     }
 }
