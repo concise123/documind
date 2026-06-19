@@ -26,6 +26,7 @@ public class CustomSecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/user/signup").denyAll()
                         .requestMatchers(
                                 "/",
                                 "/error",
