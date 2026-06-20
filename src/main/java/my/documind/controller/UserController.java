@@ -2,7 +2,6 @@ package my.documind.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import my.documind.exception.EmailAlreadyExistsException;
 import my.documind.dto.UserSignupRequest;
 import my.documind.service.UserService;
@@ -20,27 +19,23 @@ import java.io.IOException;
 
 @Controller
 @RequestMapping("/user")
-@Log4j2
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
 
     @GetMapping("/signup")
-    public void signupGET() {
-        log.info("----------signup get----------");
+    public void showSignupForm() {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "회원가입이 비활성화되었습니다.");
     }
 
 /*    @GetMapping("/signup")
-    public String signupGET(Model model) {
-        log.info("----------signup get----------");
+    public String showSignupForm(Model model) {
         model.addAttribute("userSignupRequest", new UserSignupRequest());
         return "user/signup";
     }
 
     @PostMapping("/signup")
-    public String signupPOST(@Valid UserSignupRequest userSignupRequest, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
-        log.info("----------signup post----------");
+    public String signup(@Valid UserSignupRequest userSignupRequest, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         log.info(userSignupRequest);
         if (bindingResult.hasErrors()) {
             return "user/signup";
@@ -60,7 +55,6 @@ public class UserController {
     }*/
 
     @GetMapping("/login")
-    public void LoginGET() throws IOException {
-        log.info("----------Login get----------");
+    public void showLoginForm() throws IOException {
     }
 }

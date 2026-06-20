@@ -1,14 +1,12 @@
 package my.documind.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.log4j.Log4j2;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-@Log4j2
 @ControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(DocumentNotFoundException.class)
