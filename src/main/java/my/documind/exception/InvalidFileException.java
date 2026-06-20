@@ -1,4 +1,4 @@
-package my.documind.common.exception;
+package my.documind.exception;
 
 public class InvalidFileException extends RuntimeException {
     public InvalidFileException() {

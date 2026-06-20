@@ -2,9 +2,9 @@ package my.documind.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import my.documind.common.exception.*;
 import my.documind.domain.*;
 import my.documind.dto.DocumentResponse;
+import my.documind.exception.*;
 import my.documind.repository.DocumentRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;

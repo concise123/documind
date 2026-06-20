@@ -42,7 +42,10 @@ class AsyncSummaryServiceTests {
         event = new DocumentUploadedEvent(1L);
         documentId = event.documentId();
         document = createDocument(documentId);
-        when(documentRepository.findById(documentId)).thenReturn(Optional.of(document));
+
+        when(documentRepository.findById(documentId))
+                .thenReturn(Optional.of(document));
+
         summaryResponse = createSummaryResponse();
     }
 
@@ -59,8 +62,8 @@ class AsyncSummaryServiceTests {
     }
 
     @Test
-    @DisplayName("문서 업로드 이벤트 수신 시 SummaryService에 AI 요약을 위임한다")
-    void generateSummaryAsync_delegation_test() {
+    @DisplayName("문서 업로드 이벤트 수신 시 요약 생성을 시작한다")
+    void shouldDelegateToSummaryService_whenEventIsReceived() {
         // when
         asyncSummaryService.generateSummaryAsync(event);
 
@@ -69,12 +72,16 @@ class AsyncSummaryServiceTests {
     }
 
     @Test
-    @DisplayName("요약 성공 시 상태가 DocumentStatus.COMPLETED가 된다")
-    void generateSummaryAsync_status_success() {
+    @DisplayName("요약 생성 완료 시 상태를 완료로 변경한다")
+    void shouldSetStatusToCompleted_whenSummaryGenerationSucceeds() {
         // given
         Document document = spy(createDocument(documentId));
-        when(documentRepository.findById(documentId)).thenReturn(Optional.of(document));
-        when(summaryService.generateSummary(document)).thenReturn(summaryResponse);
+
+        when(documentRepository.findById(documentId))
+                .thenReturn(Optional.of(document));
+
+        when(summaryService.generateSummary(document))
+                .thenReturn(summaryResponse);
 
         // when
         asyncSummaryService.generateSummaryAsync(event);
@@ -86,20 +93,23 @@ class AsyncSummaryServiceTests {
     }
 
     @Test
-    @DisplayName("요약 생성 중 예외가 발생해도 예외를 전파하지 않는다")
-    void generateSummaryAsync_fail_when_summary_exception_occurs() {
+    @DisplayName("요약 생성에 실패해도 서비스는 계속 동작한다")
+    void shouldNotThrowException_whenExceptionOccurs() {
         // given
-        doThrow(new RuntimeException("OpenAI Error")).when(summaryService).generateSummary(any());
+        doThrow(new RuntimeException("OpenAI Error"))
+                .when(summaryService).generateSummary(any());
 
         // when & then
         assertDoesNotThrow(() -> asyncSummaryService.generateSummaryAsync(event));
     }
 
     @Test
-    @DisplayName("AI 실패 시 FAILED 상태로 변경된다")
-    void generateSummaryAsync_fail_when_ai_fails() {
+    @DisplayName("요약 생성 실패 시 상태를 실패로 변경한다")
+    void shouldSetStatusToFailed_whenSummaryGenerationFails() {
         // when
-        when(summaryService.generateSummary(document)).thenThrow(new RuntimeException("AI 실패"));
+        when(summaryService.generateSummary(document))
+                .thenThrow(new RuntimeException("AI 실패"));
+
         asyncSummaryService.generateSummaryAsync(event);
 
         // then
@@ -107,10 +117,12 @@ class AsyncSummaryServiceTests {
     }
 
     @Test
-    @DisplayName("타임아웃 예외 발생 시 FAILED 상태로 변경된다")
-    void generateSummaryAsync_fail_when_timeout_exception_occurs() {
+    @DisplayName("타임아웃 발생 시 상태를 실패로 변경한다")
+    void shouldSetStatusToFailed_whenTimeoutExceptionOccurs() {
         // when
-        when(summaryService.generateSummary(document)).thenThrow(new RuntimeException("timeout"));
+        when(summaryService.generateSummary(document))
+                .thenThrow(new RuntimeException("timeout"));
+
         asyncSummaryService.generateSummaryAsync(event);
 
         // then

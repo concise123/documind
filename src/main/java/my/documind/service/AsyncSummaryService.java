@@ -3,7 +3,7 @@ package my.documind.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import my.documind.common.exception.SummaryException;
+import my.documind.exception.SummaryException;
 import my.documind.domain.Document;
 import my.documind.domain.DocumentAiResult;
 import my.documind.dto.SummaryResponse;

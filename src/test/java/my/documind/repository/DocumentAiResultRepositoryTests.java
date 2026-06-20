@@ -23,8 +23,8 @@ public class DocumentAiResultRepositoryTests {
     private UserRepository userRepository;
 
     @Test
-    @DisplayName("문서 ID와 타입으로 AI 결과를 조회한다")
-    void findFirstByDocumentIdAndType_success() {
+    @DisplayName("문서 아이디와 타입으로 AI 결과를 조회한다")
+    void findFirstByDocumentIdAndType_returnsAiResult_whenAiResultExists() {
         // given
         User user = User.builder()
                 .password("password")

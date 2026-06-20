@@ -1,4 +1,4 @@
-package my.documind.common.exception;
+package my.documind.exception;
 
 import lombok.Getter;
 

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>접근 불가</title>
+    <!-- Favicon-->
+    <link rel="icon" type="image/x-icon" th:href="@{/assets/favicon.ico}" />
+    <!-- Core theme CSS (includes Bootstrap)-->
+    <link th:href="@{/css/styles.css}" rel="stylesheet" />
+</head>
+<body class="align-middle" >
+<div class="container-fluid d-flex justify-content-center" style="height: 50vh">
+    <div class="card align-self-center">
+        <div class="card-header">
+            접근 불가
+        </div>
+        <div class="card-body">
+            <h5>접근이 제한된 페이지입니다.</h5>
+            <div class="my-3 float-end">
+                <a th:href="@{/}">홈으로 이동</a>
+            </div>
+        </div><!--end card body-->
+    </div><!--end card-->
+</div>
+</body>
+</html>

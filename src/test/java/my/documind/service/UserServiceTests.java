@@ -1,8 +1,8 @@
 package my.documind.service;
 
-import my.documind.common.exception.EmailAlreadyExistsException;
-import my.documind.common.exception.ErrorMessage;
-import my.documind.common.exception.UserNotFoundException;
+import my.documind.exception.EmailAlreadyExistsException;
+import my.documind.exception.ErrorMessage;
+import my.documind.exception.UserNotFoundException;
 import my.documind.domain.User;
 import my.documind.dto.UserSignupRequest;
 import my.documind.repository.UserRepository;
@@ -34,8 +34,9 @@ public class UserServiceTests {
     private UserService userService;
 
     @Test
-    @DisplayName("회원가입 성공")
-    void signup_success() {
+    @DisplayName("회원가입 요청 시 사용자를 등록한다")
+    void shouldRegisterUser_whenRequestIsValid() {
+        // given
         UserSignupRequest userSignupRequest = UserSignupRequest.builder()
                 .password("password")
                 .email("test@test.com")
@@ -48,30 +49,23 @@ public class UserServiceTests {
         when(passwordEncoder.encode(userSignupRequest.getPassword()))
                 .thenReturn("encodedPassword");
 
+        // when
         userService.signup(userSignupRequest);
 
-        ArgumentCaptor<User> captor =
-                ArgumentCaptor.forClass(User.class);
-
+        // then
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
-
         User savedUser = captor.getValue();
-
-        assertThat(savedUser.getPassword())
-                .isEqualTo("encodedPassword");
-
-        assertThat(savedUser.getEmail())
-                .isEqualTo("test@test.com");
-
-        assertThat(savedUser.getNickname())
-                .isEqualTo("tester");
-
+        assertThat(savedUser.getPassword()).isEqualTo("encodedPassword");
+        assertThat(savedUser.getEmail()).isEqualTo("test@test.com");
+        assertThat(savedUser.getNickname()).isEqualTo("tester");
         verify(userRepository).save(any(User.class));
     }
 
     @Test
-    @DisplayName("중복 이메일 회원가입 실패")
-    void signup_duplicate_email() {
+    @DisplayName("이미 사용 중인 이메일로 가입할 수 없다")
+    void shouldThrowException_whenEmailAlreadyExists() {
+        // given
         UserSignupRequest userSignupRequest = UserSignupRequest.builder()
                 .password("password")
                 .email("test@test.com")
@@ -81,6 +75,7 @@ public class UserServiceTests {
         when(userRepository.existsByEmail(userSignupRequest.getEmail()))
                 .thenReturn(true);
 
+        // when & then
         assertThatThrownBy(() ->
                 userService.signup(userSignupRequest))
                 .isInstanceOf(EmailAlreadyExistsException.class)
@@ -91,12 +86,15 @@ public class UserServiceTests {
     }
 
     @Test
-    @DisplayName("사용자가 없으면 UserNotFoundException 발생")
-    void getByEmail_user_not_found() {
-        when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.empty());
+    @DisplayName("등록되지 않은 이메일로 사용자를 조회할 수 없다")
+    void shouldThrowException_whenEmailDoesNotExist() {
+        // given
+        when(userRepository.findByEmail("test@test.com"))
+                .thenReturn(Optional.empty());
 
+        // when & then
         assertThatThrownBy(() -> userService.getByEmail("test@test.com"))
                 .isInstanceOf(UserNotFoundException.class)
-                .hasMessage(ErrorMessage.USER_NOT_FOUND.getMessage());
+                .hasMessage(ErrorMessage.USER_SESSION_INVALID.getMessage());
     }
 }

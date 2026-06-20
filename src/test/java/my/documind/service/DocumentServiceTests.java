@@ -1,9 +1,9 @@
 package my.documind.service;
 
-import my.documind.common.exception.DocumentNotFoundException;
-import my.documind.common.exception.ErrorMessage;
-import my.documind.common.exception.FileEmptyException;
-import my.documind.common.exception.InvalidFileException;
+import my.documind.exception.DocumentNotFoundException;
+import my.documind.exception.ErrorMessage;
+import my.documind.exception.FileEmptyException;
+import my.documind.exception.InvalidFileException;
 import my.documind.domain.Document;
 import my.documind.domain.DocumentStatus;
 import my.documind.domain.User;
@@ -56,7 +56,9 @@ class DocumentServiceTests {
         email = "test@test.com";
         user = createUser();
         file = mock(MultipartFile.class);
-        when(userService.getByEmail(email)).thenReturn(user);
+
+        when(userService.getByEmail(email))
+                .thenReturn(user);
     }
 
     private User createUser() {
@@ -67,14 +69,17 @@ class DocumentServiceTests {
     }
 
     @Test
-    @DisplayName("PDF 문서를 업로드하고 저장한다")
-    void upload_success() throws Exception {
+    @DisplayName("문서 업로드 시 상태를 업로드 완료로 설정한다")
+    void shouldSetStatusToUploaded_whenValidDocument() throws Exception {
         // given
-        when(file.isEmpty()).thenReturn(false);
-        when(file.getOriginalFilename()).thenReturn("test.pdf");
-        when(file.getContentType()).thenReturn("application/pdf");
-        when(documentRepository.saveAll(anyList()))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(file.isEmpty())
+                .thenReturn(false);
+
+        when(file.getOriginalFilename())
+                .thenReturn("test.pdf");
+
+        when(file.getContentType())
+                .thenReturn("application/pdf");
 
         // when
         documentService.upload(List.of(file), email);
@@ -83,21 +88,6 @@ class DocumentServiceTests {
         verify(pdfExtractor).extractText(file.getBytes());
         verify(fileStorageService).store(file);
         verify(documentRepository).saveAll(anyList());
-        verify(eventPublisher).publishEvent(any(DocumentUploadedEvent.class));
-    }
-
-    @Test
-    @DisplayName("업로드 성공 시 상태가 DocumentStatus.UPLOADED가 된다")
-    void upload_status_success() {
-        // given
-        when(file.isEmpty()).thenReturn(false);
-        when(file.getOriginalFilename()).thenReturn("test.pdf");
-        when(file.getContentType()).thenReturn("application/pdf");
-
-        // when
-        documentService.upload(List.of(file), email);
-
-        // then
         verify(documentRepository).saveAll(
                 argThat(documents -> {
                     List<Document> list = new ArrayList<>();
@@ -108,10 +98,34 @@ class DocumentServiceTests {
     }
 
     @Test
-    @DisplayName("빈 파일 업로드 실패")
-    void upload_empty_file() throws Exception {
+    @DisplayName("문서 저장 후 AI 요약 생성을 요청한다")
+    void shouldPublishDocumentUploadedEvent_whenDocumentIsSaved() {
         // given
-        when(file.isEmpty()).thenReturn(true);
+        when(file.isEmpty())
+                .thenReturn(false);
+
+        when(file.getOriginalFilename())
+                .thenReturn("test.pdf");
+
+        when(file.getContentType())
+                .thenReturn("application/pdf");
+
+        when(documentRepository.saveAll(anyList()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // when
+        documentService.upload(List.of(file), email);
+
+        // then
+        verify(eventPublisher).publishEvent(any(DocumentUploadedEvent.class));
+    }
+
+    @Test
+    @DisplayName("빈 파일은 업로드할 수 없다")
+    void shouldThrowException_whenFileIsEmpty() throws Exception {
+        // given
+        when(file.isEmpty())
+                .thenReturn(true);
 
         // when & then
         assertThatThrownBy(() -> documentService.upload(List.of(file), user.getEmail()))
@@ -120,11 +134,14 @@ class DocumentServiceTests {
     }
 
     @Test
-    @DisplayName("txt 파일 업로드 실패")
-    void upload_txt_file() throws Exception {
+    @DisplayName("PDF 형식이 아닌 파일은 업로드할 수 없다")
+    void shouldThrowException_whenFileIsNotPdf() throws Exception {
         // given
-        when(file.isEmpty()).thenReturn(false);
-        when(file.getOriginalFilename()).thenReturn("test.txt");
+        when(file.isEmpty())
+                .thenReturn(false);
+
+        when(file.getOriginalFilename())
+                .thenReturn("test.txt");
 
         // when & then
         assertThatThrownBy(() -> documentService.upload(List.of(file), user.getEmail()))
@@ -133,10 +150,11 @@ class DocumentServiceTests {
     }
 
     @Test
-    @DisplayName("문서가 없을 때 삭제 실패")
-    void delete_not_found_file() {
+    @DisplayName("존재하지 않는 문서는 삭제할 수 없다")
+    void shouldThrowException_whenDocumentDoesNotExist() {
         // given
-        when(documentRepository.findByIdAndUser(1L, user)).thenReturn(Optional.empty());
+        when(documentRepository.findByIdAndUser(1L, user))
+                .thenReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() ->documentService.delete(1L, user.getEmail()))

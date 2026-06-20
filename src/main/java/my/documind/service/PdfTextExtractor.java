@@ -1,7 +1,7 @@
 package my.documind.service;
 
-import my.documind.common.exception.ErrorMessage;
-import my.documind.common.exception.FileException;
+import my.documind.exception.ErrorMessage;
+import my.documind.exception.FileException;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
