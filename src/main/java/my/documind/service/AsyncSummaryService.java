@@ -42,8 +42,8 @@ public class AsyncSummaryService {
             document.addAiResult(aiResult);
             document.complete();
         } catch (Exception e) {
-            document.fail();
             log.error("AI 요약 생성 실패. documentId={}", documentId, e);
+            document.fail();
         }
     }
 }

@@ -68,6 +68,7 @@ public class DocumentService {
         log.info("문서 업로드 완료. email={}, savedDocumentCount={}", email, savedDocuments.size());
         savedDocuments.forEach(document ->
                 eventPublisher.publishEvent(new DocumentUploadedEvent(document.getId())));
+        log.debug("이벤트 발행 완료. email={}", email);
     }
 
     private void validateFile(MultipartFile file) {
@@ -93,6 +94,7 @@ public class DocumentService {
                 .orElseThrow(DocumentNotFoundException::new);
         fileStorageService.delete(document.getStoredFilename());
         documentRepository.delete(document);
+        log.info("문서 삭제 완료. email={}, documentId={}", email, id);
     }
 
     @Transactional(readOnly = true)

@@ -1,5 +1,6 @@
 package my.documind.service;
 
+import lombok.extern.log4j.Log4j2;
 import my.documind.exception.ErrorMessage;
 import my.documind.exception.FileException;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
+@Log4j2
 @Service
 public class LocalFileStorageService implements FileStorageService {
     @Value("${document.upload-dir}")
@@ -28,6 +30,7 @@ public class LocalFileStorageService implements FileStorageService {
                 Files.createDirectories(uploadPath);
             }
             file.transferTo(path);
+            log.info("파일 저장 완료. path={}", path);
             return storedFilename;
         } catch (IOException e) {
             throw new FileException(ErrorMessage.FILE_SAVE_FAILED, e);

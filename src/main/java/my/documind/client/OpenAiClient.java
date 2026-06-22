@@ -17,15 +17,19 @@ public class OpenAiClient {
     private final RestClient restClient;;
 
     public SummaryResponse summarize(String text) {
-        log.info("OpenAI 호출 시작");
-        OpenAiRequest request = createRequest(text);
-        OpenAiResponse response = restClient.post()
-                .uri("/v1/chat/completions")
-                .body(request)
-                .retrieve()
-                .body(OpenAiResponse.class);
-        log.info("OpenAI 호출 성공");
-        return new SummaryResponse(response.getContent(), response.model(), response.usage().totalTokens());
+        long start = System.currentTimeMillis();
+        try {
+            OpenAiRequest request = createRequest(text);
+            OpenAiResponse response = restClient.post()
+                    .uri("/v1/chat/completions")
+                    .body(request)
+                    .retrieve()
+                    .body(OpenAiResponse.class);
+            return new SummaryResponse(response.getContent(), response.model(), response.usage().totalTokens());
+        } finally {
+            long duration = System.currentTimeMillis() - start;
+            log.info("OpenAI API 호출 시간. duration={}ms", duration);
+        }
     }
 
     private OpenAiRequest createRequest(String text) {
