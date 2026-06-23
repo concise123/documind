@@ -4,6 +4,7 @@
       layout:decorate="~{layout/basic.html}">
 <head>
     <title>문서 상세</title>
+    <link th:href="@{/css/document.css}" rel="stylesheet" />
 </head>
 <body>
 <div layout:fragment="content">
@@ -14,24 +15,27 @@
                     문서 상세
                 </div>
                 <div class="card-body">
-                    <table class="table">
-                        <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>파일명</th>
-                            <th>파일 크기(Byte)</th>
-                            <th>등록일</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td th:text="${document.id}"></td>
-                            <td th:text="${document.originalFilename}"></td>
-                            <td th:text="${document.fileSize}"></td>
-                            <td th:text="${#temporals.format(document.regDate, 'yyyy-MM-dd')}"></td>
-                        </tr>
-                        </tbody>
-                    </table>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th class="d-none d-md-table-cell">ID</th>
+                                    <th class="breakWord">파일명</th>
+                                    <th class="d-none d-md-table-cell">파일 크기(Byte)</th>
+                                    <th class="d-none d-md-table-cell">등록일</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td th:text="${document.id}" class="d-none d-md-table-cell"></td>
+                                    <td th:text="${document.originalFilename}" class="breakWord"></td>
+                                    <td th:text="${document.fileSize}" class="d-none d-md-table-cell"></td>
+                                    <td th:text="${#temporals.format(document.regDate, 'yyyy-MM-dd')}"
+                                        class="d-none d-md-table-cell"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     <ul class="nav nav-tabs mt-4" id="documentTabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" data-bs-toggle="tab"

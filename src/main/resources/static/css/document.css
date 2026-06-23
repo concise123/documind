@@ -1,0 +1,25 @@
+.nav-tabs .nav-link {
+    color: #6c757d;
+}
+
+.nav-tabs .nav-link.active {
+    font-weight: 700 !important;
+}
+
+.content-panel {
+    height: 23rem;
+}
+
+.doc-card-wrap {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .doc-table-wrap {
+        display: none;
+    }
+
+    .doc-card-wrap {
+        display: block;
+    }
+}
