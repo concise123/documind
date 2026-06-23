@@ -7,6 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ErrorMessage {
     // validation (사용자 입력 문제)
+    DAILY_UPLOAD_LIMIT_EXCEEDED("오늘 생성 문서는 최대 %d개까지 보유할 수 있습니다. 현재 추가 생성 가능한 문서 수는 %d개입니다."),
     EMAIL_ALREADY_EXISTS("이미 존재하는 이메일입니다. 다른 이메일을 입력해 주세요."),
     FILE_EMPTY("파일을 선택해주세요."),
     INVALID_FILE_TYPE("PDF 파일만 업로드 가능합니다."),
@@ -26,4 +27,8 @@ public enum ErrorMessage {
     USER_SESSION_INVALID("다시 로그인해 주세요.");
 
     private final String message;
+
+    public String format(Object... args) {
+        return String.format(message, args);
+    }
 }

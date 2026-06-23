@@ -6,12 +6,15 @@ import my.documind.domain.*;
 import my.documind.dto.DocumentResponse;
 import my.documind.exception.*;
 import my.documind.repository.DocumentRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +29,9 @@ public class DocumentService {
     private final FileStorageService fileStorageService;
     private final PdfTextExtractor pdfTextExtractor;
     private final UserService userService;
+
+    @Value("${document.daily-upload-limit}")
+    private int dailyUploadLimit;
 
     /**
      * PDF 문서를 업로드하고 저장한다.
@@ -42,6 +48,7 @@ public class DocumentService {
     public void upload(List<MultipartFile> files, String email) {
         log.info("문서 업로드 시작. email={}, fileCount={}", email, files.size());
         User user = userService.getByEmail(email);
+        validateDailyUploadLimit(user, files.size());
         List<Document> documents = new ArrayList<>();
         for (MultipartFile file : files) {
             validateFile(file);
@@ -69,6 +76,24 @@ public class DocumentService {
         savedDocuments.forEach(document ->
                 eventPublisher.publishEvent(new DocumentUploadedEvent(document.getId())));
         log.debug("이벤트 발행 완료. email={}", email);
+    }
+
+    public long getTodayUploadCount(String email) {
+        User user = userService.getByEmail(email);
+        return getTodayUploadCount(user);
+    }
+
+    private void validateDailyUploadLimit(User user, int fileCount) {
+        long uploadCount = getTodayUploadCount(user);
+        long totalUploadCount = uploadCount + fileCount;
+        if (totalUploadCount > dailyUploadLimit) {
+            throw new DailyUploadLimitExceededException(ErrorMessage.DAILY_UPLOAD_LIMIT_EXCEEDED, dailyUploadLimit, dailyUploadLimit - uploadCount);
+        }
+    }
+
+    private long getTodayUploadCount(User user) {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        return documentRepository.countByUserAndRegDateAfter(user, startOfDay);
     }
 
     private void validateFile(MultipartFile file) {

@@ -12,6 +12,9 @@
             <div class="card">
                 <div class="card-header">
                     문서 조회
+                    <div class="form-text">
+                        오늘 생성 문서 : <span th:text="${todayUploadCount + ' / ' + dailyUploadLimit}"></span>
+                    </div>
                 </div>
                 <div class="card-body">
                     <table class="table">

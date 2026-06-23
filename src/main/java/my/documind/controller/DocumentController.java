@@ -2,6 +2,7 @@ package my.documind.controller;
 
 import lombok.RequiredArgsConstructor;
 import my.documind.service.DocumentService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -17,6 +18,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DocumentController {
     private final DocumentService documentService;
+
+    @Value("${document.daily-upload-limit}")
+    private int dailyUploadLimit;
 
     @PostMapping(value = "/upload")
     public String uploadDocuments(@RequestParam List<MultipartFile> files, @AuthenticationPrincipal UserDetails userDetails,
@@ -36,7 +40,10 @@ public class DocumentController {
 
     @GetMapping("/list")
     public void showDocuments(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        model.addAttribute("documents", documentService.findDocuments(userDetails.getUsername()));
+        String email = userDetails.getUsername();
+        model.addAttribute("dailyUploadLimit", dailyUploadLimit);
+        model.addAttribute("todayUploadCount", documentService.getTodayUploadCount(email));
+        model.addAttribute("documents", documentService.findDocuments(email));
     }
 
     @GetMapping("/detail/{id}")
