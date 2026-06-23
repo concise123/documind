@@ -87,13 +87,16 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">PDF 문서 업로드</h5>
+                    <div class="pe-3">
+                        <h5 class="modal-title">PDF 문서 업로드</h5>
+                        <small class="text-muted">최대 10MB / PDF만 업로드 가능</small>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form th:action="@{/document/upload}" method="post" enctype="multipart/form-data">
                 <div class="modal-body">
                     <div class="input-group mb-3">
-                        <input type="file" name="files" class="form-control" id="uploadFile" multiple>
+                        <input type="file" name="files" class="form-control" id="uploadFile" accept=".pdf" multiple>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -113,6 +116,9 @@
     const message = /*[[${message}]]*/ null;
     const uploadModal = new bootstrap.Modal(document.querySelector(".uploadModal"));
     const reopenUploadModal = /*[[${reopenUploadModal}]]*/ false;
+    const maxRequestSize = /*[[${maxRequestSize}]]*/ null;
+    const maxFileSize = /*[[${maxFileSize}]]*/ null;
+    const BYTES_PER_MB = 1024 * 1024;
     if (message && !reopenUploadModal) {
         alert(message);
     }
@@ -125,4 +131,24 @@
         uploadModal.show();
     }
     hideErrorOnInput("#uploadFile", "#uploadError", "change");
+    document.querySelector("#uploadFile").addEventListener("change", function () {
+        if (!maxRequestSize || !maxFileSize) {
+            console.error("업로드 제한값이 설정되지 않았습니다.");
+            return;
+        }
+        const files = this.files;
+        let totalSize = 0;
+        for (const file of files) {
+            if (file.size > maxFileSize) {
+                alert(`각 파일은 ${(maxFileSize / BYTES_PER_MB).toFixed(0)}MB 이하여야 합니다.`);
+                this.value = "";
+                return;
+            }
+            totalSize += file.size;
+        }
+        if (totalSize > maxRequestSize) {
+            alert(`전체 업로드 크기는 ${(maxRequestSize / BYTES_PER_MB).toFixed(0)}MB 이하여야 합니다.`);
+            this.value = "";
+        }
+    });
 </script>

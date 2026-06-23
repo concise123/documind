@@ -7,6 +7,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -21,6 +22,12 @@ public class DocumentController {
 
     @Value("${document.daily-upload-limit}")
     private int dailyUploadLimit;
+
+    @Value("${spring.servlet.multipart.max-request-size}")
+    private DataSize maxRequestSize;
+
+    @Value("${spring.servlet.multipart.max-file-size}")
+    private DataSize maxFileSize;
 
     @PostMapping(value = "/upload")
     public String uploadDocuments(@RequestParam List<MultipartFile> files, @AuthenticationPrincipal UserDetails userDetails,
@@ -42,6 +49,8 @@ public class DocumentController {
     public void showDocuments(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         String email = userDetails.getUsername();
         model.addAttribute("dailyUploadLimit", dailyUploadLimit);
+        model.addAttribute("maxRequestSize", maxRequestSize.toBytes());
+        model.addAttribute("maxFileSize", maxFileSize.toBytes());
         model.addAttribute("todayUploadCount", documentService.getTodayUploadCount(email));
         model.addAttribute("documents", documentService.findDocuments(email));
     }
