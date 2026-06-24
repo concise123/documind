@@ -8,14 +8,19 @@
 </head>
 <body>
 <div layout:fragment="content">
-    <div class="row mt-3">
+    <div class="row">
         <div class="col">
+            <div class="text-end mb-1">
+                <small class="text-danger" th:if="${uploadLimitReached}">
+                    오늘 생성 가능한 문서 수 한도에 도달했습니다.&nbsp;&nbsp;
+                </small>
+                <small class="text-muted" th:unless="${uploadLimitReached}">
+                    오늘 생성 문서 [[${todayUploadCount}]]개 보유 중 ([[${remainingUploadCount}]]개 추가 생성 가능)&nbsp;&nbsp;
+                </small>
+            </div>
             <div class="card">
                 <div class="card-header">
                     문서 조회
-                    <div class="form-text">
-                        오늘 생성 문서 : <span th:text="${todayUploadCount + ' / ' + dailyUploadLimit}"></span>
-                    </div>
                 </div>
                 <div class="card-body">
                     <!-- PC -->
@@ -75,7 +80,8 @@
                     </section>
                     <div class="my-4">
                         <div class="float-end">
-                            <button class="btn btn-primary mobile-btn-sm" id="uploadFileBtn">업로드</button>
+                            <button class="btn btn-primary mobile-btn-sm" id="uploadFileBtn"
+                                    th:disabled="${uploadLimitReached}">업로드</button>
                         </div>
                     </div>
                 </div><!--end card body-->

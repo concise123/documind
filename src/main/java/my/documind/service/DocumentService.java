@@ -87,7 +87,7 @@ public class DocumentService {
         long uploadCount = getTodayUploadCount(user);
         long totalUploadCount = uploadCount + fileCount;
         if (totalUploadCount > dailyUploadLimit) {
-            throw new DailyUploadLimitExceededException(ErrorMessage.DAILY_UPLOAD_LIMIT_EXCEEDED, dailyUploadLimit, dailyUploadLimit - uploadCount);
+            throw new DailyUploadLimitExceededException();
         }
     }
 

@@ -73,7 +73,7 @@ public class GlobalExceptionHandler {
     public String handleDailyUploadLimitExceededException(DailyUploadLimitExceededException e, HttpServletRequest request,
                                           RedirectAttributes redirectAttributes) {
         log.warn("{} uri={}, method={}", e.getMessage(), request.getRequestURI(), request.getMethod(), e);
-        redirectAttributes.addFlashAttribute("message", e.getErrorMessage().format(e.getArgs()));
+        redirectAttributes.addFlashAttribute("message", e.getMessage());
         return "redirect:/document/list";
 
     }
