@@ -13,14 +13,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.util.concurrent.Semaphore;
+
 @Service
 @RequiredArgsConstructor
 @Log4j2
 public class AsyncSummaryService {
     private final DocumentRepository documentRepository;
     private final SummaryService summaryService;
+    private static final Semaphore OPENAI_SEMAPHORE = new Semaphore(3);
 
-    @Async
+    @Async("openAiExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional
     public void generateSummaryAsync(DocumentUploadedEvent event) {
@@ -33,7 +36,11 @@ public class AsyncSummaryService {
         }
         log.info("AI 요약 생성 시작. documentId={}", documentId);
         document.startProcessing();
+        boolean acquired = false;
         try {
+            // 동시 실행 개수 제한 (과도한 리소스 사용 방지)
+            OPENAI_SEMAPHORE.acquire();
+            acquired = true;
             // AI 요약 위임
             SummaryResponse response = summaryService.generateSummary(document);
             log.info("AI 요약 생성 완료. documentId={}", documentId);
@@ -41,9 +48,16 @@ public class AsyncSummaryService {
             DocumentAiResult aiResult = DocumentAiResult.summary(response);
             document.addAiResult(aiResult);
             document.complete();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("AI 요약 생성 중단. documentId={}", documentId, e);
         } catch (Exception e) {
             log.error("AI 요약 생성 실패. documentId={}", documentId, e);
             document.fail();
+        } finally {
+            if (acquired) {
+                OPENAI_SEMAPHORE.release();
+            }
         }
     }
 }

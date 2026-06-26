@@ -24,6 +24,7 @@ public enum ErrorMessage {
     FILE_DELETE_FAILED("파일 삭제에 실패했습니다."),
     INTERNAL_SERVER_ERROR("예상치 못한 오류가 발생했습니다."),
     PDF_TEXT_EXTRACTION_FAILED("텍스트 추출에 실패했습니다."),
+    PDF_PROCESS_INTERRUPTED("텍스트 추출 작업이 중단되었습니다."),
     USER_SESSION_INVALID("다시 로그인해 주세요.");
 
     private final String message;

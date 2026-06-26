@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,6 +21,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -41,6 +45,12 @@ class DocumentServiceTests {
 
     @Mock
     private UserService userService;
+
+    @Mock
+    private ThreadPoolTaskExecutor pdfExecutor;
+
+    @Mock
+    private Future<String> future;
 
     @InjectMocks
     private DocumentService documentService;
@@ -83,6 +93,17 @@ class DocumentServiceTests {
         when(file.getContentType())
                 .thenReturn("application/pdf");
 
+        when(pdfExtractor.extractText(any()))
+                .thenReturn("text");
+
+        when(pdfExecutor.submit(any(Callable.class)))
+                .thenAnswer(invocation -> {
+                    Callable<String> task = invocation.getArgument(0);
+                    FutureTask<String> future = new FutureTask<>(task);
+                    future.run();
+                    return future;
+                });
+
         // when
         documentService.upload(List.of(file), email);
 
@@ -111,6 +132,17 @@ class DocumentServiceTests {
 
         when(file.getContentType())
                 .thenReturn("application/pdf");
+
+        when(pdfExtractor.extractText(any()))
+                .thenReturn("text");
+
+        when(pdfExecutor.submit(any(Callable.class)))
+                .thenAnswer(invocation -> {
+                    Callable<String> task = invocation.getArgument(0);
+                    FutureTask<String> future = new FutureTask<>(task);
+                    future.run();
+                    return future;
+                });
 
         when(documentRepository.saveAll(anyList()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -191,6 +223,17 @@ class DocumentServiceTests {
 
         when(documentRepository.countByUserAndRegDateAfter(eq(user), any(LocalDateTime.class)))
                 .thenReturn(1L);
+
+        when(pdfExtractor.extractText(any()))
+                .thenReturn("text");
+
+        when(pdfExecutor.submit(any(Callable.class)))
+                .thenAnswer(invocation -> {
+                    Callable<String> task = invocation.getArgument(0);
+                    FutureTask<String> future = new FutureTask<>(task);
+                    future.run();
+                    return future;
+                });
 
         // when & then
         assertThatCode(() -> documentService.upload(List.of(file), user.getEmail()))
