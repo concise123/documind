@@ -50,12 +50,12 @@ class DocumentRepositoryTests {
 
     @Test
     @DisplayName("사용자로 문서를 조회한다")
-    void findByUser_returnsDocuments_whenOwnerMatches() {
+    void findByUser_OrderByRegDateDesc_returnsDocuments_whenOwnerMatches() {
         // given
         Document document = documentRepository.save(createDocument());
 
         // when
-        List<Document> documents = documentRepository.findByUser(user);
+        List<Document> documents = documentRepository.findByUserOrderByRegDateDesc(user);
 
         // then
         assertThat(documents).hasSize(1);

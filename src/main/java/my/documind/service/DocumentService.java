@@ -172,7 +172,7 @@ public class DocumentService {
     @Transactional(readOnly = true)
     public List<DocumentResponse> findDocuments(String email) {
         User user = userService.getByEmail(email);
-        return documentRepository.findByUser(user)
+        return documentRepository.findByUserOrderByRegDateDesc(user)
                 .stream()
                 .map(document -> DocumentResponse.builder()
                         .id(document.getId())
