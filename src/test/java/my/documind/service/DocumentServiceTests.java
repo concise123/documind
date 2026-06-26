@@ -59,6 +59,8 @@ class DocumentServiceTests {
 
         when(userService.getByEmail(email))
                 .thenReturn(user);
+
+        ReflectionTestUtils.setField(documentService, "dailyUploadLimit", 3);
     }
 
     private User createUser() {
@@ -169,8 +171,6 @@ class DocumentServiceTests {
         when(documentRepository.countByUserAndRegDateAfter(eq(user), any(LocalDateTime.class)))
                 .thenReturn(3L);
 
-        ReflectionTestUtils.setField(documentService, "dailyUploadLimit", 3);
-
         // when & then
         assertThatThrownBy(() -> documentService.upload(List.of(file), user.getEmail()))
                 .isInstanceOf(DailyUploadLimitExceededException.class);
@@ -191,8 +191,6 @@ class DocumentServiceTests {
 
         when(documentRepository.countByUserAndRegDateAfter(eq(user), any(LocalDateTime.class)))
                 .thenReturn(1L);
-
-        ReflectionTestUtils.setField(documentService, "dailyUploadLimit", 3);
 
         // when & then
         assertThatCode(() -> documentService.upload(List.of(file), user.getEmail()))
