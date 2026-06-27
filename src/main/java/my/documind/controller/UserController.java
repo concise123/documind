@@ -36,7 +36,6 @@ public class UserController {
 
     @PostMapping("/signup")
     public String signup(@Valid UserSignupRequest userSignupRequest, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
-        log.info(userSignupRequest);
         if (bindingResult.hasErrors()) {
             return "user/signup";
         }

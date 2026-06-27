@@ -10917,10 +10917,15 @@ body.sb-sidenav-toggled #sidebarToggle .close-label {
   border-radius: 0.5rem;
 }
 
-.nav-tabs .nav-link {
-    color: #6c757d;
+.breakWord {
+  word-break: break-word;
 }
 
-.content-panel {
-    height: 23rem;
+@media (max-width: 768px) {
+    .btn-mobile-sm {
+      --bs-btn-padding-y: 0.25rem;
+      --bs-btn-padding-x: 0.5rem;
+      --bs-btn-font-size: 0.875rem;
+      --bs-btn-border-radius: 0.25rem;
+    }
 }

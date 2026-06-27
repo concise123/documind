@@ -100,7 +100,10 @@ exception
 config
  ├─ Spring Security 설정
  ├─ 비동기 설정
- └─ RestClient 설정
+ ├─ RestClient 설정
+ ├─ 비동기 작업용 스레드 풀 설정
+ ├─ 메모리 사용량 관련 기능
+ └─ 초기화 작업 트리거
 
 auth
  └─ CustomUserDetailsService
@@ -159,8 +162,9 @@ client
 사용자 요청
  → DocumentController
  → DocumentService
- → PDF 텍스트 추출
  → PDF 파일 로컬 스토리지에 저장
+ → PDF 텍스트 추출 (병렬)
+ → 모든 PDF 추출 완료 대기
  → Document 저장
  → 이벤트 발행
 ```
@@ -255,11 +259,32 @@ client
 * 입력값 변경 시 검증 메시지 제거
 * 플래시 메시지 속성을 통일하여 일관된 사용자 피드백 제공
 * 문서 상세 화면에서 추출된 텍스트를 바로 확인할 수 있도록 구성
+* 업로드 정책 화면 노출
+* 문서 목록 화면 반응형으로 카드 UI 분리
 
 ### Git 전략
 
 * 기능 단위 브랜치 전략 적용
 * feat, fix, refactor 등 목적에 맞는 커밋 메시지 사용
+
+## 트러블슈팅
+
+### 문제
+* Railway에서 대용량 PDF 다중 업로드 시 컨테이너 재시작 발생
+
+### 원인 분석
+* PDFBox 텍스트 추출 과정에서 리소스 사용량 증가
+* Free 플랜의 제한된 메모리 환경 영향
+
+### 대응
+* 파일 업로드 검증 강화
+* HTTP/2 비활성화
+* JVM 메모리 설정 및 실행 환경 개선
+* ThreadPool 기반 비동기 처리 도입
+
+### 향후 계획
+* Queue 기반 처리
+* Redis 도입
 
 ## 향후 계획
 * 키워드 검색

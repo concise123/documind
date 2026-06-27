@@ -1,6 +1,5 @@
 package my.documind.service;
 
-import lombok.extern.log4j.Log4j2;
 import my.documind.client.OpenAiClient;
 import my.documind.domain.*;
 import my.documind.dto.SummaryResponse;
@@ -15,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@Log4j2
 @ExtendWith(MockitoExtension.class)
 class SummaryServiceTests {
     @Mock
