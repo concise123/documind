@@ -1,9 +1,7 @@
 package my.documind.service;
 
-import my.documind.exception.DocumentNotFoundException;
-import my.documind.exception.ErrorMessage;
-import my.documind.exception.FileEmptyException;
-import my.documind.exception.InvalidFileException;
+import my.documind.config.MemoryLogger;
+import my.documind.exception.*;
 import my.documind.domain.Document;
 import my.documind.domain.DocumentStatus;
 import my.documind.domain.User;
@@ -16,12 +14,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
@@ -37,10 +42,19 @@ class DocumentServiceTests {
     private FileStorageService fileStorageService;
 
     @Mock
+    private MemoryLogger memoryLogger;
+
+    @Mock
     private PdfTextExtractor pdfExtractor;
 
     @Mock
     private UserService userService;
+
+    @Mock
+    private ThreadPoolTaskExecutor pdfExecutor;
+
+    @Mock
+    private Future<String> future;
 
     @InjectMocks
     private DocumentService documentService;
@@ -59,6 +73,8 @@ class DocumentServiceTests {
 
         when(userService.getByEmail(email))
                 .thenReturn(user);
+
+        ReflectionTestUtils.setField(documentService, "dailyUploadLimit", 3);
     }
 
     private User createUser() {
@@ -80,6 +96,17 @@ class DocumentServiceTests {
 
         when(file.getContentType())
                 .thenReturn("application/pdf");
+
+        when(pdfExtractor.extractText(any()))
+                .thenReturn("text");
+
+        when(pdfExecutor.submit(any(Callable.class)))
+                .thenAnswer(invocation -> {
+                    Callable<String> task = invocation.getArgument(0);
+                    FutureTask<String> future = new FutureTask<>(task);
+                    future.run();
+                    return future;
+                });
 
         // when
         documentService.upload(List.of(file), email);
@@ -109,6 +136,17 @@ class DocumentServiceTests {
 
         when(file.getContentType())
                 .thenReturn("application/pdf");
+
+        when(pdfExtractor.extractText(any()))
+                .thenReturn("text");
+
+        when(pdfExecutor.submit(any(Callable.class)))
+                .thenAnswer(invocation -> {
+                    Callable<String> task = invocation.getArgument(0);
+                    FutureTask<String> future = new FutureTask<>(task);
+                    future.run();
+                    return future;
+                });
 
         when(documentRepository.saveAll(anyList()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -160,5 +198,49 @@ class DocumentServiceTests {
         assertThatThrownBy(() ->documentService.delete(1L, user.getEmail()))
                 .isInstanceOf(DocumentNotFoundException.class)
                 .hasMessage(ErrorMessage.DOCUMENT_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    @DisplayName("하루 업로드 제한을 초과하면 업로드를 실패한다")
+    void shouldThrowException_whenDailyUploadLimitExceeded() {
+        // given
+        when(documentRepository.countByUserAndRegDateAfter(eq(user), any(LocalDateTime.class)))
+                .thenReturn(3L);
+
+        // when & then
+        assertThatThrownBy(() -> documentService.upload(List.of(file), user.getEmail()))
+                .isInstanceOf(DailyUploadLimitExceededException.class);
+    }
+
+    @Test
+    @DisplayName("하루 업로드 제한 이내이면 문서를 정상 업로드한다")
+    void shouldUploadSuccessfully_whenWithinDailyUploadLimit() {
+        // given
+        when(file.isEmpty())
+                .thenReturn(false);
+
+        when(file.getOriginalFilename())
+                .thenReturn("test.pdf");
+
+        when(file.getContentType())
+                .thenReturn("application/pdf");
+
+        when(documentRepository.countByUserAndRegDateAfter(eq(user), any(LocalDateTime.class)))
+                .thenReturn(1L);
+
+        when(pdfExtractor.extractText(any()))
+                .thenReturn("text");
+
+        when(pdfExecutor.submit(any(Callable.class)))
+                .thenAnswer(invocation -> {
+                    Callable<String> task = invocation.getArgument(0);
+                    FutureTask<String> future = new FutureTask<>(task);
+                    future.run();
+                    return future;
+                });
+
+        // when & then
+        assertThatCode(() -> documentService.upload(List.of(file), user.getEmail()))
+                .doesNotThrowAnyException();
     }
 }

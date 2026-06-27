@@ -46,7 +46,6 @@ public class LocalFileStorageServiceTests {
         String storedFilename = fileStorageService.store(file);
 
         // then
-        assertThat(storedFilename).endsWith("_test.pdf");
         verify(file).transferTo(any(Path.class));
     }
 

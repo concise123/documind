@@ -7,6 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ErrorMessage {
     // validation (사용자 입력 문제)
+    DAILY_UPLOAD_LIMIT_EXCEEDED("오늘 생성 가능한 문서 수 한도에 도달했습니다."),
     EMAIL_ALREADY_EXISTS("이미 존재하는 이메일입니다. 다른 이메일을 입력해 주세요."),
     FILE_EMPTY("파일을 선택해주세요."),
     INVALID_FILE_TYPE("PDF 파일만 업로드 가능합니다."),
@@ -23,6 +24,7 @@ public enum ErrorMessage {
     FILE_DELETE_FAILED("파일 삭제에 실패했습니다."),
     INTERNAL_SERVER_ERROR("예상치 못한 오류가 발생했습니다."),
     PDF_TEXT_EXTRACTION_FAILED("텍스트 추출에 실패했습니다."),
+    PDF_PROCESS_INTERRUPTED("텍스트 추출 작업이 중단되었습니다."),
     USER_SESSION_INVALID("다시 로그인해 주세요.");
 
     private final String message;

@@ -5,6 +5,7 @@ import my.documind.exception.ErrorMessage;
 import my.documind.exception.FileException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -21,7 +22,8 @@ public class LocalFileStorageService implements FileStorageService {
 
     @Override
     public String store(MultipartFile file) {
-        String storedFilename = UUID.randomUUID() + "_" + file.getOriginalFilename(); // 파일명 충돌 방지를 위해 UUID 사용
+        String storedFilename = UUID.randomUUID() // 파일명 충돌 방지를 위해 UUID 사용
+                + "." + StringUtils.getFilenameExtension(file.getOriginalFilename());
         Path uploadPath = Paths.get(uploadDir);
         Path path = Paths.get(uploadDir, storedFilename);
         try {

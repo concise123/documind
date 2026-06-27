@@ -4,52 +4,84 @@
       layout:decorate="~{layout/basic.html}">
 <head>
     <title>문서 조회</title>
+    <link th:href="@{/css/document.css}" rel="stylesheet" />
 </head>
 <body>
 <div layout:fragment="content">
-    <div class="row mt-3">
+    <div class="row">
         <div class="col">
+            <div class="text-end mb-1">
+                <small class="text-danger" th:if="${uploadLimitReached}">
+                    오늘 생성 가능한 문서 수 한도에 도달했습니다.&nbsp;&nbsp;
+                </small>
+                <small class="text-muted" th:unless="${uploadLimitReached}">
+                    오늘 생성 문서 [[${todayUploadCount}]]개 보유 중 ([[${remainingUploadCount}]]개 추가 생성 가능)&nbsp;&nbsp;
+                </small>
+            </div>
             <div class="card">
                 <div class="card-header">
                     문서 조회
                 </div>
                 <div class="card-body">
-                    <table class="table">
-                        <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>파일명</th>
-                            <th>파일 크기(Byte)</th>
-                            <th>등록일</th>
-                            <th>삭제</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:if="${#lists.isEmpty(documents)}">
-                            <td colspan="5">
-                                업로드된 문서가 없습니다.
-                            </td>
-                        </tr>
-                        <tr th:each="document : ${documents}">
-                            <td th:text="${document.id}"></td>
-                            <td>
-                                <a th:href="@{/document/detail/{id}(id=${document.id})}"
-                                   th:text="${document.originalFilename}">
-                                </a>
-                            </td>
-                            <td th:text="${document.fileSize}"></td>
-                            <td th:text="${#temporals.format(document.regDate, 'yyyy-MM-dd')}"></td>
-                            <td>
-                                <form th:action="@{/document/delete/{id}(id=${document.id})}" method="post">
-                                    <button type="submit" class="btn btn-primary">삭제</button>
-                                </form>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <!-- PC -->
+                    <section class="doc-table-wrap">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>파일명</th>
+                                    <th>파일 크기(Byte)</th>
+                                    <th>등록일</th>
+                                    <th>삭제</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${#lists.isEmpty(documents)}">
+                                    <td colspan="5">
+                                        업로드된 문서가 없습니다.
+                                    </td>
+                                </tr>
+                                <tr th:each="document : ${documents}">
+                                    <td th:text="${document.id}"></td>
+                                    <td>
+                                        <a th:href="@{/document/detail/{id}(id=${document.id})}"
+                                           th:text="${document.originalFilename}">
+                                        </a>
+                                    </td>
+                                    <td th:text="${document.fileSize}"></td>
+                                    <td th:text="${#temporals.format(document.regDate, 'yyyy-MM-dd')}"></td>
+                                    <td>
+                                        <form th:action="@{/document/delete/{id}(id=${document.id})}" method="post">
+                                            <button type="submit" class="btn btn-danger">삭제</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                    <!-- MOBILE -->
+                    <section class="doc-card-wrap">
+                        <div class="card mb-2" th:each="document : ${documents}">
+                            <div class="card-body">
+                                <h6 th:text="${document.originalFilename}"></h6>
+                                <div class="text-muted small"
+                                     th:text="${#temporals.format(document.regDate, 'yyyy-MM-dd')}"></div>
+                                <div class="mt-2 d-flex gap-2">
+                                    <a class="btn btn-primary mobile-btn-sm"
+                                       th:href="@{/document/detail/{id}(id=${document.id})}">조회</a>
+                                    <form th:action="@{/document/delete/{id}(id=${document.id})}" method="post">
+                                        <button type="submit" class="btn btn-danger mobile-btn-sm">삭제</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                     <div class="my-4">
                         <div class="float-end">
-                            <button class="btn btn-primary" id="uploadFileBtn">업로드</button>
+                            <button class="btn btn-primary mobile-btn-sm" id="uploadFileBtn"
+                                    th:disabled="${uploadLimitReached}">업로드</button>
                         </div>
                     </div>
                 </div><!--end card body-->
@@ -61,13 +93,16 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">PDF 문서 업로드</h5>
+                    <div class="pe-3">
+                        <h5 class="modal-title">PDF 문서 업로드</h5>
+                        <small class="text-muted">최대 10MB / PDF만 업로드 가능</small>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form th:action="@{/document/upload}" method="post" enctype="multipart/form-data">
                 <div class="modal-body">
                     <div class="input-group mb-3">
-                        <input type="file" name="files" class="form-control" id="uploadFile" multiple>
+                        <input type="file" name="files" class="form-control" id="uploadFile" accept=".pdf" multiple>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -87,6 +122,9 @@
     const message = /*[[${message}]]*/ null;
     const uploadModal = new bootstrap.Modal(document.querySelector(".uploadModal"));
     const reopenUploadModal = /*[[${reopenUploadModal}]]*/ false;
+    const maxRequestSize = /*[[${maxRequestSize}]]*/ null;
+    const maxFileSize = /*[[${maxFileSize}]]*/ null;
+    const BYTES_PER_MB = 1024 * 1024;
     if (message && !reopenUploadModal) {
         alert(message);
     }
@@ -99,4 +137,24 @@
         uploadModal.show();
     }
     hideErrorOnInput("#uploadFile", "#uploadError", "change");
+    document.querySelector("#uploadFile").addEventListener("change", function () {
+        if (!maxRequestSize || !maxFileSize) {
+            console.error("업로드 제한값이 설정되지 않았습니다.");
+            return;
+        }
+        const files = this.files;
+        let totalSize = 0;
+        for (const file of files) {
+            if (file.size > maxFileSize) {
+                alert(`각 파일은 ${(maxFileSize / BYTES_PER_MB).toFixed(0)}MB 이하여야 합니다.`);
+                this.value = "";
+                return;
+            }
+            totalSize += file.size;
+        }
+        if (totalSize > maxRequestSize) {
+            alert(`전체 업로드 크기는 ${(maxRequestSize / BYTES_PER_MB).toFixed(0)}MB 이하여야 합니다.`);
+            this.value = "";
+        }
+    });
 </script>
