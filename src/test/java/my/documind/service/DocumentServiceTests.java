@@ -1,5 +1,6 @@
 package my.documind.service;
 
+import my.documind.config.MemoryLogger;
 import my.documind.exception.*;
 import my.documind.domain.Document;
 import my.documind.domain.DocumentStatus;
@@ -39,6 +40,9 @@ class DocumentServiceTests {
 
     @Mock
     private FileStorageService fileStorageService;
+
+    @Mock
+    private MemoryLogger memoryLogger;
 
     @Mock
     private PdfTextExtractor pdfExtractor;

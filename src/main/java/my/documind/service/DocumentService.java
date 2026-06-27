@@ -2,6 +2,7 @@ package my.documind.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import my.documind.config.MemoryLogger;
 import my.documind.domain.*;
 import my.documind.dto.DocumentResponse;
 import my.documind.exception.*;
@@ -30,6 +31,7 @@ public class DocumentService {
     private final ApplicationEventPublisher eventPublisher;
     private final DocumentRepository documentRepository;
     private final FileStorageService fileStorageService;
+    private final MemoryLogger memoryLogger;
     private final PdfTextExtractor pdfTextExtractor;
     private final UserService userService;
 
@@ -69,7 +71,13 @@ public class DocumentService {
                 throw new FileException(ErrorMessage.FILE_READ_FAILED, e);
             }
             storedFilenames.add(fileStorageService.store(file));
-            Future<String> future = pdfExecutor.submit(() -> pdfTextExtractor.extractText(fileBytes));
+            Future<String> future = pdfExecutor.submit(() -> {
+                memoryLogger.logMemory("PDF 추출 시작. file=" + file.getOriginalFilename());
+                String text = pdfTextExtractor.extractText(fileBytes);
+                memoryLogger.logMemory("PDF 추출 완료. file=" + file.getOriginalFilename()
+                        + ", length=" + text.length());
+                return text;
+            });
             futures.add(future);
         }
         try {
@@ -120,6 +128,7 @@ public class DocumentService {
         }
         List<Document> savedDocuments = documentRepository.saveAll(documents);
         log.info("문서 업로드 완료. email={}, savedDocumentCount={}", email, savedDocuments.size());
+        memoryLogger.logMemory("문서 업로드 완료.");
         savedDocuments.forEach(document ->
                 eventPublisher.publishEvent(new DocumentUploadedEvent(document.getId())));
         log.debug("이벤트 발행 완료. email={}", email);
