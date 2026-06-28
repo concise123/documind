@@ -37,12 +37,12 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr th:if="${#lists.isEmpty(documents)}">
+                                <tr th:if="${#lists.isEmpty(pageResponse.dtoList)}">
                                     <td colspan="5">
                                         업로드된 문서가 없습니다.
                                     </td>
                                 </tr>
-                                <tr th:each="document : ${documents}">
+                                <tr th:each="document : ${pageResponse.dtoList}">
                                     <td th:text="${document.id}"></td>
                                     <td>
                                         <a th:href="@{/document/detail/{id}(id=${document.id})}"
@@ -63,12 +63,12 @@
                     </section>
                     <!-- MOBILE -->
                     <section class="doc-card-wrap">
-                        <div class="card mb-2" th:if="${#lists.isEmpty(documents)}">
+                        <div class="card mb-2" th:if="${#lists.isEmpty(pageResponse.dtoList)}">
                             <div class="card-body">
                                 업로드된 문서가 없습니다.
                             </div>
                         </div>
-                        <div class="card mb-2" th:each="document : ${documents}">
+                        <div class="card mb-2" th:each="document : ${pageResponse.dtoList}">
                             <div class="card-body">
                                 <h6 th:text="${document.originalFilename}"></h6>
                                 <div class="text-muted small"
@@ -83,11 +83,25 @@
                             </div>
                         </div>
                     </section>
-                    <div class="my-4">
-                        <div class="float-end">
-                            <button class="btn btn-primary mobile-btn-sm" id="uploadFileBtn"
-                                    th:disabled="${uploadLimitReached}">업로드</button>
-                        </div>
+                    <!-- 공통 -->
+                    <div th:unless="${#lists.isEmpty(pageResponse.dtoList)}">
+                        <ul class="pagination flex-wrap">
+                            <li class="page-item" th:if="${pageResponse.prev}">
+                                <a class="page-link" th:href="@{/document/list(page=${pageResponse.start-1})}">«</a>
+                            </li>
+                            <th:block th:each="i: ${#numbers.sequence(pageResponse.start, pageResponse.end)}">
+                                <li th:class="${pageResponse.page == i}?'page-item active':'page-item'" >
+                                    <a class="page-link" th:href="@{/document/list(page=${i})}">[[${i}]]</a>
+                                </li>
+                            </th:block>
+                            <li class="page-item" th:if="${pageResponse.next}">
+                                <a class="page-link" th:href="@{/document/list(page=${pageResponse.end+1})}">»</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="float-end">
+                        <button class="btn btn-primary mobile-btn-sm" id="uploadFileBtn"
+                                th:disabled="${uploadLimitReached}">업로드</button>
                     </div>
                 </div><!--end card body-->
             </div><!--end card-->

@@ -5,11 +5,16 @@ import lombok.extern.log4j.Log4j2;
 import my.documind.config.MemoryLogger;
 import my.documind.domain.*;
 import my.documind.dto.DocumentResponse;
+import my.documind.dto.PageResponse;
 import my.documind.exception.*;
 import my.documind.repository.DocumentRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +33,8 @@ import java.util.concurrent.Future;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class DocumentService {
+    private static final int PAGE_SIZE = 5;
+
     private final ApplicationEventPublisher eventPublisher;
     private final DocumentRepository documentRepository;
     private final FileStorageService fileStorageService;
@@ -179,9 +186,11 @@ public class DocumentService {
     }
 
     @Transactional(readOnly = true)
-    public List<DocumentResponse> findDocuments(String email) {
+    public PageResponse<DocumentResponse> findDocuments(String email, int page) {
         User user = userService.getByEmail(email);
-        return documentRepository.findByUserOrderByRegDateDesc(user)
+        Pageable pageable = PageRequest.of(page - 1, PAGE_SIZE, Sort.by("regDate").descending());
+        Page<Document> result = documentRepository.findByUser(user, pageable);
+        List<DocumentResponse> dtoList = result.getContent()
                 .stream()
                 .map(document -> DocumentResponse.builder()
                         .id(document.getId())
@@ -190,6 +199,12 @@ public class DocumentService {
                         .regDate(document.getRegDate())
                         .build())
                 .toList();
+        return PageResponse.<DocumentResponse>withAll()
+                .page(page)
+                .size(PAGE_SIZE)
+                .total((int)result.getTotalElements())
+                .dtoList(dtoList)
+                .build();
     }
 
     @Transactional(readOnly = true)
