@@ -8,6 +8,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.Optional;
@@ -50,14 +54,16 @@ class DocumentRepositoryTests {
 
     @Test
     @DisplayName("사용자로 문서를 조회한다")
-    void findByUser_OrderByRegDateDesc_returnsDocuments_whenOwnerMatches() {
+    void findByUser_returnsDocuments_whenOwnerMatches() {
         // given
         Document document = documentRepository.save(createDocument());
+        Pageable pageable = PageRequest.of(0, 5, Sort.by("regDate").descending());
 
         // when
-        List<Document> documents = documentRepository.findByUserOrderByRegDateDesc(user);
+        Page<Document> result = documentRepository.findByUser(user, pageable);
 
         // then
+        List<Document> documents = result.getContent();
         assertThat(documents).hasSize(1);
         assertThat(documents.get(0).getOriginalFilename()).isEqualTo("test.pdf");
     }

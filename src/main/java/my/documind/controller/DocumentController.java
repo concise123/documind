@@ -46,7 +46,8 @@ public class DocumentController {
     }
 
     @GetMapping("/list")
-    public void showDocuments(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+    public void showDocuments(@RequestParam(required = false, defaultValue = "1", value = "page") int page,
+                              @AuthenticationPrincipal UserDetails userDetails, Model model) {
         String email = userDetails.getUsername();
         long todayUploadCount = documentService.getTodayUploadCount(email);
         model.addAttribute("dailyUploadLimit", dailyUploadLimit);
@@ -55,7 +56,7 @@ public class DocumentController {
         model.addAttribute("todayUploadCount", todayUploadCount);
         model.addAttribute("uploadLimitReached", dailyUploadLimit <= todayUploadCount);
         model.addAttribute("remainingUploadCount", Math.max(0, dailyUploadLimit - todayUploadCount));
-        model.addAttribute("documents", documentService.findDocuments(email));
+        model.addAttribute("pageResponse", documentService.findDocuments(email, page));
     }
 
     @GetMapping("/detail/{id}")
