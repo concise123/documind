@@ -63,6 +63,11 @@
                     </section>
                     <!-- MOBILE -->
                     <section class="doc-card-wrap">
+                        <div class="card mb-2" th:if="${#lists.isEmpty(documents)}">
+                            <div class="card-body">
+                                업로드된 문서가 없습니다.
+                            </div>
+                        </div>
                         <div class="card mb-2" th:each="document : ${documents}">
                             <div class="card-body">
                                 <h6 th:text="${document.originalFilename}"></h6>
