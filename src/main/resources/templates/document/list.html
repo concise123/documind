@@ -84,7 +84,7 @@
                         </div>
                     </section>
                     <!-- 공통 -->
-                    <div th:unless="${#lists.isEmpty(pageResponse.dtoList)}">
+                    <div th:unless="${#lists.isEmpty(pageResponse.dtoList) or (pageResponse.end < 2)}">
                         <ul class="pagination flex-wrap">
                             <li class="page-item" th:if="${pageResponse.prev}">
                                 <a class="page-link" th:href="@{/document/list(page=${pageResponse.start-1})}">«</a>
