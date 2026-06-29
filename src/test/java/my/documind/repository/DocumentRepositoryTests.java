@@ -46,7 +46,7 @@ class DocumentRepositoryTests {
     private Document createDocument() {
         return Document.builder()
                 .originalFilename("test.pdf")
-                .storedFilename("uuid_test.pdf")
+                .storedFilename("uuid.pdf")
                 .contentType("application/pdf")
                 .fileSize(100L)
                 .user(user)

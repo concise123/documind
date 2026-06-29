@@ -1,6 +1,7 @@
 package my.documind.controller;
 
 import lombok.RequiredArgsConstructor;
+import my.documind.dto.DocumentRequest;
 import my.documind.service.DocumentService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -46,8 +47,8 @@ public class DocumentController {
     }
 
     @GetMapping("/list")
-    public void showDocuments(@RequestParam(required = false, defaultValue = "1", value = "page") int page,
-                              @AuthenticationPrincipal UserDetails userDetails, Model model) {
+    public void showDocuments(@AuthenticationPrincipal UserDetails userDetails,
+                              DocumentRequest documentRequest, Model model) {
         String email = userDetails.getUsername();
         long todayUploadCount = documentService.getTodayUploadCount(email);
         model.addAttribute("dailyUploadLimit", dailyUploadLimit);
@@ -56,7 +57,7 @@ public class DocumentController {
         model.addAttribute("todayUploadCount", todayUploadCount);
         model.addAttribute("uploadLimitReached", dailyUploadLimit <= todayUploadCount);
         model.addAttribute("remainingUploadCount", Math.max(0, dailyUploadLimit - todayUploadCount));
-        model.addAttribute("pageResponse", documentService.findDocuments(email, page));
+        model.addAttribute("pageResponse", documentService.findDocuments(email, documentRequest));
     }
 
     @GetMapping("/detail/{id}")
