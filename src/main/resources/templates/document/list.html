@@ -23,6 +23,18 @@
                     문서 조회
                 </div>
                 <div class="card-body">
+                    <!-- 공통 -->
+                    <div class="mb-3">
+                        <form action="/document/list" method="get" id="searchForm">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="keyword"
+                                       th:value="${documentRequest.keyword}">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary searchBtn" type="submit">검색</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                     <!-- PC -->
                     <section class="doc-table-wrap">
                         <div class="table-responsive">
@@ -87,15 +99,15 @@
                     <div th:unless="${#lists.isEmpty(pageResponse.dtoList) or (pageResponse.end < 2)}">
                         <ul class="pagination flex-wrap">
                             <li class="page-item" th:if="${pageResponse.prev}">
-                                <a class="page-link" th:href="@{/document/list(page=${pageResponse.start-1})}">«</a>
+                                <a class="page-link" th:data-num="${pageResponse.start - 1}">«</a>
                             </li>
                             <th:block th:each="i: ${#numbers.sequence(pageResponse.start, pageResponse.end)}">
                                 <li th:class="${pageResponse.page == i}?'page-item active':'page-item'" >
-                                    <a class="page-link" th:href="@{/document/list(page=${i})}">[[${i}]]</a>
+                                    <a class="page-link" th:data-num="${i}">[[${i}]]</a>
                                 </li>
                             </th:block>
                             <li class="page-item" th:if="${pageResponse.next}">
-                                <a class="page-link" th:href="@{/document/list(page=${pageResponse.end+1})}">»</a>
+                                <a class="page-link" th:data-num="${pageResponse.end + 1}">»</a>
                             </li>
                         </ul>
                     </div>
@@ -144,6 +156,7 @@
     const maxRequestSize = /*[[${maxRequestSize}]]*/ null;
     const maxFileSize = /*[[${maxFileSize}]]*/ null;
     const BYTES_PER_MB = 1024 * 1024;
+    const pagination = document.querySelector(".pagination");
     if (message && !reopenUploadModal) {
         alert(message);
     }
@@ -176,4 +189,18 @@
             this.value = "";
         }
     });
+    if (pagination) {
+        pagination.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const target = e.target;
+            if(target.tagName !== 'A') {
+                return;
+            }
+            const num = target.getAttribute("data-num");
+            const formObj = document.querySelector("#searchForm");
+            formObj.innerHTML += `<input type='hidden' name='page' value='${num}'>`;
+            formObj.submit();
+        }, false);
+    }
 </script>

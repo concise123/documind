@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import my.documind.config.MemoryLogger;
 import my.documind.domain.*;
+import my.documind.dto.DocumentRequest;
 import my.documind.dto.DocumentResponse;
 import my.documind.dto.PageResponse;
 import my.documind.exception.*;
@@ -186,10 +187,18 @@ public class DocumentService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<DocumentResponse> findDocuments(String email, int page) {
+    public PageResponse<DocumentResponse> findDocuments(String email, DocumentRequest documentRequest) {
         User user = userService.getByEmail(email);
-        Pageable pageable = PageRequest.of(page - 1, PAGE_SIZE, Sort.by("regDate").descending());
-        Page<Document> result = documentRepository.findByUser(user, pageable);
+        int page = documentRequest.getPage();
+        String keyword = documentRequest.getKeyword();
+        Page<Document> result;
+        if (keyword == null || keyword.isBlank()) {
+            Pageable pageable = PageRequest.of(page - 1, PAGE_SIZE, Sort.by("regDate").descending());
+            result = documentRepository.findByUser(user, pageable);
+        } else {
+            Pageable pageable = PageRequest.of(page - 1, PAGE_SIZE);
+            result = documentRepository.searchByUserAndKeyword(user.getId(), keyword.trim(), pageable);
+        }
         List<DocumentResponse> dtoList = result.getContent()
                 .stream()
                 .map(document -> DocumentResponse.builder()
@@ -197,6 +206,7 @@ public class DocumentService {
                         .originalFilename(document.getOriginalFilename())
                         .fileSize(document.getFileSize())
                         .regDate(document.getRegDate())
+                        .documentRequest(documentRequest)
                         .build())
                 .toList();
         return PageResponse.<DocumentResponse>withAll()
