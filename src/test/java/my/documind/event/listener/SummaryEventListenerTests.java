@@ -1,6 +1,7 @@
 package my.documind.event.listener;
 
 import my.documind.event.DocumentUploadedEvent;
+import my.documind.workflow.SummaryTriggerType;
 import my.documind.workflow.SummaryWorkflowService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,6 @@ public class SummaryEventListenerTests {
         summaryEventListener.handle(event);
 
         // then
-        verify(workflowService).processSummary(documentId);
+        verify(workflowService).processSummary(documentId, SummaryTriggerType.START);
     }
 }

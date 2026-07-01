@@ -3,7 +3,6 @@ package my.documind.workflow;
 import my.documind.domain.Document;
 import my.documind.domain.DocumentStatus;
 import my.documind.dto.SummaryResponse;
-import my.documind.event.DocumentUploadedEvent;
 import my.documind.repository.DocumentRepository;
 import my.documind.service.SummaryService;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
@@ -31,8 +31,6 @@ class SummaryWorkflowServiceTests {
     @InjectMocks
     private SummaryWorkflowService summaryWorkflowService;
 
-    private DocumentUploadedEvent event;
-
     private Long documentId;
 
     private Document document;
@@ -41,14 +39,14 @@ class SummaryWorkflowServiceTests {
 
     @BeforeEach
     void setUp() {
-        event = new DocumentUploadedEvent(1L);
-        documentId = event.documentId();
-        document = createDocument(documentId);
+        documentId = 1L;
+        document = spy(createDocument(documentId));
 
         when(documentRepository.findById(documentId))
                 .thenReturn(Optional.of(document));
 
         summaryResponse = createSummaryResponse();
+        ReflectionTestUtils.setField(summaryWorkflowService, "maxRetryCount", 3);
     }
 
     private Document createDocument(Long documentId) {
@@ -64,24 +62,50 @@ class SummaryWorkflowServiceTests {
     }
 
     @Test
-    @DisplayName("요약 생성 완료 시 상태를 완료로 변경한다")
-    void shouldSetStatusToCompleted_whenSummaryGenerationSucceeds() {
+    @DisplayName("요약 생성을 처리한다.")
+    void shouldProcessSummary_whenTriggerTypeIsValid() {
         // given
-        Document document = spy(createDocument(documentId));
-
-        when(documentRepository.findById(documentId))
-                .thenReturn(Optional.of(document));
-
         when(summaryService.generateSummary(document))
                 .thenReturn(summaryResponse);
 
         // when
-        summaryWorkflowService.processSummary(documentId);
+        summaryWorkflowService.processSummary(documentId, SummaryTriggerType.START);
+
+        // then
+        verify(document).complete();
+        verify(document, never()).fail();
+        verify(summaryService).generateSummary(document);
+        assertThat(document.getStatus()).isEqualTo(DocumentStatus.COMPLETED);
+    }
+
+    @Test
+    @DisplayName("요약 생성을 시작한다.")
+    void shouldStartSummaryProcessing_whenTriggerTypeIsStart() {
+        // given
+        when(summaryService.generateSummary(document))
+                .thenReturn(summaryResponse);
+
+        // when
+        summaryWorkflowService.processSummary(documentId, SummaryTriggerType.START);
 
         // then
         verify(document).startProcessing();
-        verify(document).complete();
-        assertThat(document.getStatus()).isEqualTo(DocumentStatus.COMPLETED);
+        verify(document, never()).retryProcessing();
+    }
+
+    @Test
+    @DisplayName("요약 생성을 재시도한다.")
+    void shouldRetrySummaryProcessing_whenTriggerTypeIsRetry() {
+        // given
+        when(summaryService.generateSummary(document))
+                .thenReturn(summaryResponse);
+
+        // when
+        summaryWorkflowService.processSummary(documentId, SummaryTriggerType.RETRY);
+
+        // then
+        verify(document).retryProcessing();
+        verify(document, never()).startProcessing();
     }
 
     @Test
@@ -92,7 +116,7 @@ class SummaryWorkflowServiceTests {
                 .when(summaryService).generateSummary(any());
 
         // when & then
-        assertDoesNotThrow(() -> summaryWorkflowService.processSummary(documentId));
+        assertDoesNotThrow(() -> summaryWorkflowService.processSummary(documentId, SummaryTriggerType.START));
     }
 
     @Test
@@ -102,7 +126,7 @@ class SummaryWorkflowServiceTests {
         when(summaryService.generateSummary(document))
                 .thenThrow(new RuntimeException("AI 실패"));
 
-        summaryWorkflowService.processSummary(documentId);
+        summaryWorkflowService.processSummary(documentId, SummaryTriggerType.START);
 
         // then
         assertThat(document.getStatus()).isEqualTo(DocumentStatus.FAILED);
@@ -115,7 +139,7 @@ class SummaryWorkflowServiceTests {
         when(summaryService.generateSummary(document))
                 .thenThrow(new RuntimeException("timeout"));
 
-        summaryWorkflowService.processSummary(documentId);
+        summaryWorkflowService.processSummary(documentId, SummaryTriggerType.START);
 
         // then
         assertThat(document.getStatus()).isEqualTo(DocumentStatus.FAILED);

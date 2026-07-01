@@ -13,6 +13,8 @@ public enum ErrorMessage {
     INVALID_FILE_TYPE("PDF 파일만 업로드 가능합니다."),
     FILE_SIZE_EXCEEDED("파일 크기가 너무 큽니다."),
     SUMMARY_TEXT_EMPTY("요약할 텍스트가 없습니다."),
+    SUMMARY_RETRY_LIMIT_EXCEEDED("재시도 횟수를 초과했습니다."),
+    SUMMARY_ALREADY_PROCESSING("이미 처리 중입니다."),
 
     // not found (리소스 없음)
     USER_NOT_FOUND("존재하지 않는 사용자입니다."),

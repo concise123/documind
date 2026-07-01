@@ -45,6 +45,10 @@ public class Document extends BaseEntity {
     private String extractedText;
 
     @Builder.Default
+    @Column(nullable = false)
+    private Integer retryCount = 0;
+
+    @Builder.Default
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DocumentAiResult> aiResults = new ArrayList<>();
 
@@ -58,6 +62,15 @@ public class Document extends BaseEntity {
 
     public void fail() {
         this.status = DocumentStatus.FAILED;
+    }
+
+    public void retryProcessing() {
+        this.retryCount++;
+        this.status = DocumentStatus.PROCESSING;
+    }
+
+    public boolean isProcessing() {
+        return this.status == DocumentStatus.PROCESSING;
     }
 
     public void addAiResult(DocumentAiResult aiResult) {

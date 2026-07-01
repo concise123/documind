@@ -2,6 +2,7 @@ package my.documind.event.listener;
 
 import lombok.RequiredArgsConstructor;
 import my.documind.event.DocumentUploadedEvent;
+import my.documind.workflow.SummaryTriggerType;
 import my.documind.workflow.SummaryWorkflowService;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,6 @@ public class SummaryEventListener {
     @Async("openAiExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(DocumentUploadedEvent event) {
-        workflowService.processSummary(event.documentId());
+        workflowService.processSummary(event.documentId(), SummaryTriggerType.START);
     }
 }

@@ -75,7 +75,14 @@ public class GlobalExceptionHandler {
         log.warn("{} uri={}, method={}", e.getMessage(), request.getRequestURI(), request.getMethod(), e);
         redirectAttributes.addFlashAttribute("message", e.getMessage());
         return "redirect:/document/list";
+    }
 
+    @ExceptionHandler(SummaryException.class)
+    public String handleSummaryException(SummaryException e, HttpServletRequest request,
+                                         RedirectAttributes redirectAttributes) {
+        log.warn("{} uri={}, method={}", e.getMessage(), request.getRequestURI(), request.getMethod(), e);
+        redirectAttributes.addFlashAttribute("message", e.getMessage());
+        return "redirect:/document/list";
     }
 
     @ExceptionHandler(Exception.class)
