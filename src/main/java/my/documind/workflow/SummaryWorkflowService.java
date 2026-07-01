@@ -1,4 +1,4 @@
-package my.documind.service;
+package my.documind.workflow;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -8,26 +8,21 @@ import my.documind.domain.Document;
 import my.documind.domain.DocumentAiResult;
 import my.documind.dto.SummaryResponse;
 import my.documind.repository.DocumentRepository;
-import org.springframework.scheduling.annotation.Async;
+import my.documind.service.SummaryService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.concurrent.Semaphore;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
-public class AsyncSummaryService {
+public class SummaryWorkflowService {
     private final DocumentRepository documentRepository;
     private final SummaryService summaryService;
     private static final Semaphore OPENAI_SEMAPHORE = new Semaphore(3);
 
-    @Async("openAiExecutor")
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional
-    public void generateSummaryAsync(DocumentUploadedEvent event) {
-        Long documentId = event.documentId();
+    public void processSummary(Long documentId) {
         Document document = documentRepository.findById(documentId).orElseThrow(SummaryException::new);
         String content = document.getExtractedText();
         if (content == null || content.isBlank()) {

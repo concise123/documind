@@ -1,9 +1,11 @@
-package my.documind.service;
+package my.documind.workflow;
 
 import my.documind.domain.Document;
 import my.documind.domain.DocumentStatus;
 import my.documind.dto.SummaryResponse;
+import my.documind.event.DocumentUploadedEvent;
 import my.documind.repository.DocumentRepository;
+import my.documind.service.SummaryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class AsyncSummaryServiceTests {
+class SummaryWorkflowServiceTests {
     @Mock
     private DocumentRepository documentRepository;
 
@@ -27,7 +29,7 @@ class AsyncSummaryServiceTests {
     private SummaryService summaryService;
 
     @InjectMocks
-    private AsyncSummaryService asyncSummaryService;
+    private SummaryWorkflowService summaryWorkflowService;
 
     private DocumentUploadedEvent event;
 
@@ -62,16 +64,6 @@ class AsyncSummaryServiceTests {
     }
 
     @Test
-    @DisplayName("문서 업로드 이벤트 수신 시 요약 생성을 시작한다")
-    void shouldDelegateToSummaryService_whenEventIsReceived() {
-        // when
-        asyncSummaryService.generateSummaryAsync(event);
-
-        //then
-        verify(summaryService).generateSummary(document);
-    }
-
-    @Test
     @DisplayName("요약 생성 완료 시 상태를 완료로 변경한다")
     void shouldSetStatusToCompleted_whenSummaryGenerationSucceeds() {
         // given
@@ -84,7 +76,7 @@ class AsyncSummaryServiceTests {
                 .thenReturn(summaryResponse);
 
         // when
-        asyncSummaryService.generateSummaryAsync(event);
+        summaryWorkflowService.processSummary(documentId);
 
         // then
         verify(document).startProcessing();
@@ -100,7 +92,7 @@ class AsyncSummaryServiceTests {
                 .when(summaryService).generateSummary(any());
 
         // when & then
-        assertDoesNotThrow(() -> asyncSummaryService.generateSummaryAsync(event));
+        assertDoesNotThrow(() -> summaryWorkflowService.processSummary(documentId));
     }
 
     @Test
@@ -110,7 +102,7 @@ class AsyncSummaryServiceTests {
         when(summaryService.generateSummary(document))
                 .thenThrow(new RuntimeException("AI 실패"));
 
-        asyncSummaryService.generateSummaryAsync(event);
+        summaryWorkflowService.processSummary(documentId);
 
         // then
         assertThat(document.getStatus()).isEqualTo(DocumentStatus.FAILED);
@@ -123,7 +115,7 @@ class AsyncSummaryServiceTests {
         when(summaryService.generateSummary(document))
                 .thenThrow(new RuntimeException("timeout"));
 
-        asyncSummaryService.generateSummaryAsync(event);
+        summaryWorkflowService.processSummary(documentId);
 
         // then
         assertThat(document.getStatus()).isEqualTo(DocumentStatus.FAILED);

@@ -7,6 +7,7 @@ import my.documind.domain.*;
 import my.documind.dto.DocumentRequest;
 import my.documind.dto.DocumentResponse;
 import my.documind.dto.PageResponse;
+import my.documind.event.DocumentUploadedEvent;
 import my.documind.exception.*;
 import my.documind.repository.DocumentRepository;
 import org.springframework.beans.factory.annotation.Qualifier;

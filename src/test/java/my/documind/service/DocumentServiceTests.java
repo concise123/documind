@@ -1,6 +1,7 @@
 package my.documind.service;
 
 import my.documind.config.MemoryLogger;
+import my.documind.event.DocumentUploadedEvent;
 import my.documind.exception.*;
 import my.documind.domain.Document;
 import my.documind.domain.DocumentStatus;
