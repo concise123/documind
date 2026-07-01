@@ -3,6 +3,7 @@ package my.documind.workflow;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import my.documind.exception.DocumentNotFoundException;
 import my.documind.exception.SummaryException;
 import my.documind.domain.Document;
 import my.documind.domain.DocumentAiResult;
@@ -23,12 +24,8 @@ public class SummaryWorkflowService {
 
     @Transactional
     public void processSummary(Long documentId) {
-        Document document = documentRepository.findById(documentId).orElseThrow(SummaryException::new);
-        String content = document.getExtractedText();
-        if (content == null || content.isBlank()) {
-            document.fail();
-            return;
-        }
+        Document document = find(documentId);
+        validateDocument(document);
         log.info("AI 요약 생성 시작. documentId={}", documentId);
         document.startProcessing();
         boolean acquired = false;
@@ -53,6 +50,18 @@ public class SummaryWorkflowService {
             if (acquired) {
                 OPENAI_SEMAPHORE.release();
             }
+        }
+    }
+
+    private Document find(Long id) {
+        return documentRepository.findById(id).orElseThrow(DocumentNotFoundException::new);
+    }
+
+    private void validateDocument(Document document) {
+        String content = document.getExtractedText();
+        if (content == null || content.isBlank()) {
+            document.fail();
+            throw new SummaryException();
         }
     }
 }
