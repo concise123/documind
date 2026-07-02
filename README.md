@@ -21,11 +21,16 @@ PDF 문서를 업로드하면 텍스트를 추출하고 AI가 문서 내용을 �
 * PDF 텍스트 추출
 * 문서 삭제
 * 문서 목록 조회
+* 문서 페이징
 * 문서 상세 조회
 
 ### AI 요약
 
 * OpenAI API 기반 문서 요약
+
+### 키워드 검색
+
+* PostgreSQL Full Text Search(FTS) 기반 키워드 검색
 
 ## 기술 스택
 
@@ -39,6 +44,7 @@ PDF 문서를 업로드하면 텍스트를 추출하고 AI가 문서 내용을 �
 ### Database
 
 * PostgreSQL
+* Flyway
 
 ### Frontend
 
@@ -53,6 +59,12 @@ PDF 문서를 업로드하면 텍스트를 추출하고 AI가 문서 내용을 �
 ### Build
 
 * Gradle
+
+### Test
+
+* JUnit
+* Mockito
+* Testcontainers
 
 ## 프로젝트 구조
 전체 구조 파악에 유리한 계층형 패키지 구조를 사용했습니다.
@@ -140,6 +152,7 @@ client
 |status|character varying|문서 처리 상태|
 |stored_filename|character varying|저장 파일명|
 |user_id|bigint|업로드 사용자(FK)|
+|search_vector|TSVECTOR|검색 벡터|
 
 ### DocumentAiResult 테이블
 역할: AI 처리 결과 관리
@@ -287,7 +300,6 @@ client
 * Redis 도입
 
 ## 향후 계획
-* 키워드 검색
 * RAG 기반 검색
 * 문서 기반 질의응답
 * REST API 제공
