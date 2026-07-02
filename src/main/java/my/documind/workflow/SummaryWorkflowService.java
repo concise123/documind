@@ -25,6 +25,39 @@ public class SummaryWorkflowService {
     @Value("${document.summary.max-retry-count}")
     private int maxRetryCount;
 
+    /**
+     * 문서 AI 요약 시 상태 관리와 AI workflow orchestration을 담당한다.
+     *
+     * <p>
+     * 문서 업로드 이후 또는 실패 후 재시도 요청에 따라 START / RETRY 트리거 타입에 맞게 상태를 전이한다.
+     * AI 호출은 {@link SummaryService}에 위임하며 AI 요약을 수행한 뒤 결과를 저장한다.
+     * </p>
+     *
+     * <h3>처리 흐름</h3>
+     * <ol>
+     *     <li>Document 조회</li>
+     *     <li>중복 실행 방지 검증
+     *     <li>원본 텍스트 검증</li>
+     *     <li>START / RETRY 상태 전이</li>
+     *     <li>AI 요약 요청 (SummaryService 위임)</li>
+     *     <li>성공 시 COMPLETED 처리</li>
+     *     <li>실패 시 FAILED 처리</li>
+     * </ol>
+     *
+     * <h3>트리거 타입</h3>
+     * <ul>
+     *     <li>START: 최초 요약 실행 (UPLOADED → PROCESSING)</li>
+     *     <li>RETRY: 실패 이후 재시도 (FAILED → PROCESSING, retryCount 증가)</li>
+     * </ul>
+     *
+     * @param documentId 처리할 문서 ID
+     * @param type START 또는 RETRY 트리거 타입
+     * @throws DocumentNotFoundException 문서 조회에 실패한 경우
+     * @throws SummaryAlreadyProcessingException 이미 처리 중인 경우
+     * @throws SummaryException 문서 내용이 없는 경우
+     * @throws SummaryRetryLimitExceededException 재시도 횟수를 초과한 경우
+     * @throws OpenAiConcurrencyLimitException OpenAI 동시성 제한을 초과한 경우
+     */
     @Transactional
     public void processSummary(Long documentId, SummaryTriggerType type) {
         Document document = find(documentId);
