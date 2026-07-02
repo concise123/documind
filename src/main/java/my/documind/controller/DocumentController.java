@@ -85,4 +85,15 @@ public class DocumentController {
         }
         return "redirect:/document/detail/" + id;
     }
+
+    @PostMapping("/summary/start/{id}")
+    public String startSummary(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            summaryWorkflowService.processSummary(id, SummaryTriggerType.START);
+        } catch (SummaryAlreadyProcessingException | SummaryRetryLimitExceededException e) {
+            redirectAttributes.addFlashAttribute("message", e.getMessage());
+        }
+        return "redirect:/document/detail/" + id;
+    }
 }
