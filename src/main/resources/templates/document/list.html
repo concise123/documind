@@ -23,6 +23,18 @@
                     문서 조회
                 </div>
                 <div class="card-body">
+                    <!-- 공통 -->
+                    <div class="mb-3">
+                        <form action="/document/list" method="get" id="searchForm">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="keyword"
+                                       th:value="${documentRequest.keyword}">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary searchBtn" type="submit">검색</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                     <!-- PC -->
                     <section class="doc-table-wrap">
                         <div class="table-responsive">
@@ -37,12 +49,12 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr th:if="${#lists.isEmpty(documents)}">
+                                <tr th:if="${#lists.isEmpty(pageResponse.dtoList)}">
                                     <td colspan="5">
                                         업로드된 문서가 없습니다.
                                     </td>
                                 </tr>
-                                <tr th:each="document : ${documents}">
+                                <tr th:each="document : ${pageResponse.dtoList}">
                                     <td th:text="${document.id}"></td>
                                     <td>
                                         <a th:href="@{/document/detail/{id}(id=${document.id})}"
@@ -63,7 +75,12 @@
                     </section>
                     <!-- MOBILE -->
                     <section class="doc-card-wrap">
-                        <div class="card mb-2" th:each="document : ${documents}">
+                        <div class="card mb-2" th:if="${#lists.isEmpty(pageResponse.dtoList)}">
+                            <div class="card-body">
+                                업로드된 문서가 없습니다.
+                            </div>
+                        </div>
+                        <div class="card mb-2" th:each="document : ${pageResponse.dtoList}">
                             <div class="card-body">
                                 <h6 th:text="${document.originalFilename}"></h6>
                                 <div class="text-muted small"
@@ -78,11 +95,25 @@
                             </div>
                         </div>
                     </section>
-                    <div class="my-4">
-                        <div class="float-end">
-                            <button class="btn btn-primary mobile-btn-sm" id="uploadFileBtn"
-                                    th:disabled="${uploadLimitReached}">업로드</button>
-                        </div>
+                    <!-- 공통 -->
+                    <div th:unless="${#lists.isEmpty(pageResponse.dtoList) or (pageResponse.end < 2)}">
+                        <ul class="pagination flex-wrap">
+                            <li class="page-item" th:if="${pageResponse.prev}">
+                                <a class="page-link" th:data-num="${pageResponse.start - 1}">«</a>
+                            </li>
+                            <th:block th:each="i: ${#numbers.sequence(pageResponse.start, pageResponse.end)}">
+                                <li th:class="${pageResponse.page == i}?'page-item active':'page-item'" >
+                                    <a class="page-link" th:data-num="${i}">[[${i}]]</a>
+                                </li>
+                            </th:block>
+                            <li class="page-item" th:if="${pageResponse.next}">
+                                <a class="page-link" th:data-num="${pageResponse.end + 1}">»</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="float-end">
+                        <button class="btn btn-primary mobile-btn-sm" id="uploadFileBtn"
+                                th:disabled="${uploadLimitReached}">업로드</button>
                     </div>
                 </div><!--end card body-->
             </div><!--end card-->
@@ -125,6 +156,7 @@
     const maxRequestSize = /*[[${maxRequestSize}]]*/ null;
     const maxFileSize = /*[[${maxFileSize}]]*/ null;
     const BYTES_PER_MB = 1024 * 1024;
+    const pagination = document.querySelector(".pagination");
     if (message && !reopenUploadModal) {
         alert(message);
     }
@@ -157,4 +189,18 @@
             this.value = "";
         }
     });
+    if (pagination) {
+        pagination.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const target = e.target;
+            if(target.tagName !== 'A') {
+                return;
+            }
+            const num = target.getAttribute("data-num");
+            const formObj = document.querySelector("#searchForm");
+            formObj.innerHTML += `<input type='hidden' name='page' value='${num}'>`;
+            formObj.submit();
+        }, false);
+    }
 </script>

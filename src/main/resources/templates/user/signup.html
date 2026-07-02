@@ -18,12 +18,12 @@
                     <form id="registerForm" th:action="@{/user/signup}" th:object="${userSignupRequest}" method="post">
                         <div class="input-group mb-3">
                             <span class="input-group-text">이메일</span>
-                            <input type="email" th:field="*{email}" name="email" required maxlength="255" class="form-control">
+                            <input type="email" th:field="*{email}" name="email" required maxlength="255" class="form-control" autocomplete="username">
                             <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" id="emailError"></div>
                         </div>
                         <div class="input-group mb-3">
                             <span class="input-group-text">비밀번호</span>
-                            <input type="text" th:field="*{password}" name="password" required minlength="4" maxlength="20" class="form-control">
+                            <input type="password" th:field="*{password}" name="password" required minlength="4" maxlength="20" class="form-control" autocomplete="new-password">
                             <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" id="passwordError"></div>
                         </div>
                         <div class="input-group mb-3">

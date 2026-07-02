@@ -16,4 +16,5 @@ public class DocumentResponse {
     private String extractedText;
     private String summary;
     private LocalDateTime regDate;
+    private DocumentRequest documentRequest;
 }
