@@ -26,7 +26,7 @@ public class DocumentAiResultRepositoryTests {
 
     @Test
     @DisplayName("문서 아이디와 타입으로 AI 결과를 조회한다")
-    void findFirstByDocumentIdAndType_returnsAiResult_whenAiResultExists() {
+    void findFirstByDocumentIdAndTypeOrderByRegDateDesc_returnsAiResult_whenAiResultExists() {
         // given
         User user = User.builder()
                 .password("password")
@@ -52,7 +52,7 @@ public class DocumentAiResultRepositoryTests {
 
         // when
         Optional<DocumentAiResult> result = documentAiResultRepository
-                .findFirstByDocumentIdAndType(document.getId(), AiResultType.SUMMARY);
+                .findFirstByDocumentIdAndTypeOrderByRegDateDesc(document.getId(), AiResultType.SUMMARY);
 
         // then
         assertThat(result).isPresent();

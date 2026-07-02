@@ -9,6 +9,7 @@ import my.documind.dto.DocumentResponse;
 import my.documind.dto.PageResponse;
 import my.documind.event.DocumentUploadedEvent;
 import my.documind.exception.*;
+import my.documind.repository.DocumentAiResultRepository;
 import my.documind.repository.DocumentRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +39,7 @@ public class DocumentService {
     private static final int PAGE_SIZE = 5;
 
     private final ApplicationEventPublisher eventPublisher;
+    private final DocumentAiResultRepository documentAiResultRepository;
     private final DocumentRepository documentRepository;
     private final FileStorageService fileStorageService;
     private final MemoryLogger memoryLogger;
@@ -223,10 +225,9 @@ public class DocumentService {
         User user = userService.getByEmail(email);
         Document document = documentRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new DocumentNotFoundException());
-        String summary = document.getAiResults().stream()
-                .filter(aiResult -> aiResult.getType() == AiResultType.SUMMARY)
+        String summary = documentAiResultRepository
+                .findFirstByDocumentIdAndTypeOrderByRegDateDesc(id, AiResultType.SUMMARY)
                 .map(DocumentAiResult::getContent)
-                .findFirst()
                 .orElse(null);
         return DocumentResponse.builder()
                 .id(document.getId())
