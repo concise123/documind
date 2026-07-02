@@ -78,7 +78,7 @@ public class SummaryWorkflowService {
                 throw new OpenAiConcurrencyLimitException();
             }
             // AI 요약 위임
-            SummaryResponse response = summaryService.generateSummary(document);
+            SummaryResponse response = summaryService.generateSummary(document.getExtractedText());
             log.info("AI 요약 생성 완료. documentId={}", documentId);
             // AI 결과 저장
             DocumentAiResult aiResult = DocumentAiResult.summary(response);

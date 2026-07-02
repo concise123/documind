@@ -65,7 +65,7 @@ class SummaryWorkflowServiceTests {
     @DisplayName("요약 생성을 처리한다.")
     void shouldProcessSummary_whenTriggerTypeIsValid() {
         // given
-        when(summaryService.generateSummary(document))
+        when(summaryService.generateSummary(document.getExtractedText()))
                 .thenReturn(summaryResponse);
 
         // when
@@ -74,7 +74,7 @@ class SummaryWorkflowServiceTests {
         // then
         verify(document).complete();
         verify(document, never()).fail();
-        verify(summaryService).generateSummary(document);
+        verify(summaryService).generateSummary(document.getExtractedText());
         assertThat(document.getStatus()).isEqualTo(DocumentStatus.COMPLETED);
     }
 
@@ -82,7 +82,7 @@ class SummaryWorkflowServiceTests {
     @DisplayName("요약 생성을 시작한다.")
     void shouldStartSummaryProcessing_whenTriggerTypeIsStart() {
         // given
-        when(summaryService.generateSummary(document))
+        when(summaryService.generateSummary(document.getExtractedText()))
                 .thenReturn(summaryResponse);
 
         // when
@@ -97,7 +97,7 @@ class SummaryWorkflowServiceTests {
     @DisplayName("요약 생성을 재시도한다.")
     void shouldRetrySummaryProcessing_whenTriggerTypeIsRetry() {
         // given
-        when(summaryService.generateSummary(document))
+        when(summaryService.generateSummary(document.getExtractedText()))
                 .thenReturn(summaryResponse);
 
         // when
@@ -123,7 +123,7 @@ class SummaryWorkflowServiceTests {
     @DisplayName("요약 생성 실패 시 상태를 실패로 변경한다")
     void shouldSetStatusToFailed_whenSummaryGenerationFails() {
         // when
-        when(summaryService.generateSummary(document))
+        when(summaryService.generateSummary(document.getExtractedText()))
                 .thenThrow(new RuntimeException("AI 실패"));
 
         summaryWorkflowService.processSummary(documentId, SummaryTriggerType.START);
@@ -136,7 +136,7 @@ class SummaryWorkflowServiceTests {
     @DisplayName("타임아웃 발생 시 상태를 실패로 변경한다")
     void shouldSetStatusToFailed_whenTimeoutExceptionOccurs() {
         // when
-        when(summaryService.generateSummary(document))
+        when(summaryService.generateSummary(document.getExtractedText()))
                 .thenThrow(new RuntimeException("timeout"));
 
         summaryWorkflowService.processSummary(documentId, SummaryTriggerType.START);
