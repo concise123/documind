@@ -236,6 +236,7 @@ public class DocumentService {
                 .status(document.getStatus())
                 .extractedText(document.getExtractedText())
                 .summary(summary)
+                .retryCount(document.getRetryCount())
                 .regDate(document.getRegDate())
                 .build();
     }

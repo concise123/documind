@@ -2,7 +2,11 @@ package my.documind.controller;
 
 import lombok.RequiredArgsConstructor;
 import my.documind.dto.DocumentRequest;
+import my.documind.exception.SummaryAlreadyProcessingException;
+import my.documind.exception.SummaryRetryLimitExceededException;
 import my.documind.service.DocumentService;
+import my.documind.workflow.SummaryTriggerType;
+import my.documind.workflow.SummaryWorkflowService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,6 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DocumentController {
     private final DocumentService documentService;
+    private final SummaryWorkflowService summaryWorkflowService;
 
     @Value("${document.daily-upload-limit}")
     private int dailyUploadLimit;
@@ -29,6 +34,9 @@ public class DocumentController {
 
     @Value("${spring.servlet.multipart.max-file-size}")
     private DataSize maxFileSize;
+
+    @Value("${document.summary.max-retry-count}")
+    private int maxRetryCount;
 
     @PostMapping(value = "/upload")
     public String uploadDocuments(@RequestParam List<MultipartFile> files, @AuthenticationPrincipal UserDetails userDetails,
@@ -62,7 +70,19 @@ public class DocumentController {
 
     @GetMapping("/detail/{id}")
     public String showDocument(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, Model model) {
+        model.addAttribute("maxRetryCount", maxRetryCount);
         model.addAttribute("document", documentService.findDocument(id, userDetails.getUsername()));
         return "document/detail";
+    }
+
+    @PostMapping("/summary/retry/{id}")
+    public String retrySummary(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            summaryWorkflowService.processSummary(id, SummaryTriggerType.RETRY);
+        } catch (SummaryAlreadyProcessingException | SummaryRetryLimitExceededException e) {
+            redirectAttributes.addFlashAttribute("message", e.getMessage());
+        }
+        return "redirect:/document/detail/" + id;
     }
 }
