@@ -3,13 +3,10 @@ package my.documind.workflow;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import my.documind.exception.DocumentNotFoundException;
-import my.documind.exception.SummaryAlreadyProcessingException;
-import my.documind.exception.SummaryException;
+import my.documind.exception.*;
 import my.documind.domain.Document;
 import my.documind.domain.DocumentAiResult;
 import my.documind.dto.SummaryResponse;
-import my.documind.exception.SummaryRetryLimitExceededException;
 import my.documind.repository.DocumentRepository;
 import my.documind.service.SummaryService;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,8 +40,10 @@ public class SummaryWorkflowService {
         boolean acquired = false;
         try {
             // 동시 실행 개수 제한 (과도한 리소스 사용 방지)
-            OPENAI_SEMAPHORE.acquire();
-            acquired = true;
+            acquired = OPENAI_SEMAPHORE.tryAcquire();
+            if (!acquired) {
+                throw new OpenAiConcurrencyLimitException();
+            }
             // AI 요약 위임
             SummaryResponse response = summaryService.generateSummary(document);
             log.info("AI 요약 생성 완료. documentId={}", documentId);
@@ -52,16 +51,11 @@ public class SummaryWorkflowService {
             DocumentAiResult aiResult = DocumentAiResult.summary(response);
             document.addAiResult(aiResult);
             document.complete();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("AI 요약 생성 중단. documentId={}", documentId, e);
         } catch (Exception e) {
             log.error("AI 요약 생성 실패. documentId={}", documentId, e);
             document.fail();
         } finally {
-            if (acquired) {
-                OPENAI_SEMAPHORE.release();
-            }
+            OPENAI_SEMAPHORE.release();
         }
     }
 
