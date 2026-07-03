@@ -15,6 +15,7 @@ public class DocumentResponse {
     private DocumentStatus status;
     private String extractedText;
     private String summary;
+    private Integer retryCount;
     private LocalDateTime regDate;
     private DocumentRequest documentRequest;
 }

@@ -48,8 +48,20 @@
                     </ul>
                     <div class="tab-content border border-top-0 p-3">
                         <div class="tab-pane fade show active" id="summary-tab">
+                            <!-- UPLOADED -->
+                            <div th:if="${document.status.name() == 'UPLOADED'}" class="content-panel text-center">
+                                <form id="startSummaryForm"
+                                      th:action="@{/document/summary/start/{id}(id=${document.id})}" method="post">
+                                    <button class="btn btn-outline-secondary btn-sm" type="submit">요약 생성</button>
+                                    <div class="loading-indicator d-none align-items-center justify-content-center">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status"
+                                             aria-hidden="true"></div>
+                                        <span>요청 중...</span>
+                                    </div>
+                                </form>
+                            </div>
                             <!-- PROCESSING -->
-                            <div th:if="${document.status.name() == 'UPLOADED' or document.status.name() == 'PROCESSING'}" class="content-panel text-center">
+                            <div th:if="${document.status.name() == 'PROCESSING'}" class="content-panel text-center">
                                 <div class="mt-3">
                                     <p>AI 요약 생성 중입니다. 잠시 후 새로고침하여 결과를 확인하세요.</p>
                                 </div>
@@ -62,7 +74,21 @@
                             </div>
                             <!-- FAILED -->
                             <div th:if="${document.status.name() == 'FAILED'}" class="content-panel text-center">
-                                <p class="mb-3">요약 생성에 실패했습니다.</p>
+                                <div class="mt-3">
+                                    <p>요약 생성에 실패했습니다.</p>
+                                </div>
+                                <form id="retrySummaryForm" th:if="${document.retryCount < maxRetryCount}"
+                                      th:action="@{/document/summary/retry/{id}(id=${document.id})}" method="post">
+                                    <button class="btn btn-outline-secondary btn-sm" type="submit">재시도</button>
+                                    <div class="loading-indicator d-none align-items-center justify-content-center">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status"
+                                             aria-hidden="true"></div>
+                                        <span>요청 중...</span>
+                                    </div>
+                                </form>
+                                <p th:unless="${document.retryCount < maxRetryCount}" class="text-muted mb-0">
+                                    최대 시도 횟수를 초과했습니다.
+                                </p>
                             </div>
                         </div><!--summary tab end-->
                         <div class="tab-pane fade" id="original-tab">
@@ -82,3 +108,19 @@
         </div>
     </div>
 </div>
+
+<script layout:fragment="script" th:inline="javascript">
+    function showLoadingOnSubmit(form) {
+        if (!form) {
+            return;
+        }
+        form.addEventListener("submit", () => {
+            form.querySelector("button[type='submit']").classList.add("d-none");
+            const loading = form.querySelector(".loading-indicator");
+            loading.classList.remove("d-none");
+            loading.classList.add("d-flex");
+        });
+    }
+    showLoadingOnSubmit(document.querySelector('#startSummaryForm'));
+    showLoadingOnSubmit(document.querySelector('#retrySummaryForm'));
+</script>
