@@ -208,4 +208,26 @@ class DocumentServiceTests {
         assertThatCode(() -> documentService.upload(List.of(file), user.getEmail()))
                 .doesNotThrowAnyException();
     }
+
+    @Test
+    @DisplayName("PDF 추출에 실패하면 파일을 정리한다")
+    void shouldCleanupUploadedFiles_whenPdfBatchRunnerFails() {
+        // given
+        when(file.isEmpty())
+                .thenReturn(false);
+
+        when(file.getOriginalFilename())
+                .thenReturn("test.pdf");
+
+        when(file.getContentType())
+                .thenReturn("application/pdf");
+
+        doThrow(new RuntimeException())
+                .when(pdfBatchRunner).extractAll(anyList());
+
+        // when & then
+        assertThatThrownBy(() -> documentService.upload(List.of(file), email))
+                .isInstanceOf(RuntimeException.class);
+        verify(fileStorageService).delete(any());
+    }
 }

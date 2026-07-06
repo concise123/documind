@@ -65,13 +65,11 @@ public class DocumentService {
         log.info("문서 업로드 시작. email={}, fileCount={}", email, files.size());
         User user = userService.getByEmail(email);
         validateDailyUploadLimit(user, files.size());
-        List<String> storedFilenames = new ArrayList<>();
         List<UploadFile> uploadFiles = new ArrayList<>();
         List<Document> documents;
         for (MultipartFile file : files) {
             validateFile(file);
             String storedFilename = fileStorageService.store(file);
-            storedFilenames.add(storedFilename);
             uploadFiles.add(new UploadFile(file, storedFilename));
         }
         try {
@@ -83,13 +81,7 @@ public class DocumentService {
                     })
                     .toList();
         } catch (RuntimeException e) {
-            for (String filename : storedFilenames) {
-                try {
-                    fileStorageService.delete(filename);
-                } catch (FileException fe) {
-                    log.warn("파일 정리 작업 실패", fe);
-                }
-            }
+            cleanupUploadedFiles(uploadFiles);
             throw e;
         }
         List<Document> savedDocuments = documentRepository.saveAll(documents);
@@ -131,6 +123,16 @@ public class DocumentService {
         if (!"application/pdf".equals(file.getContentType())) {
             throw new InvalidFileException();
         }
+    }
+
+    private void cleanupUploadedFiles(List<UploadFile> uploadFiles) {
+        uploadFiles.forEach(uploadFile -> {
+            try {
+                fileStorageService.delete(uploadFile.storedFilename());
+            } catch (FileException e) {
+                log.warn("파일 정리 작업 실패. storedFilename={}", uploadFile.storedFilename(), e);
+            }
+        });
     }
 
     @Transactional
