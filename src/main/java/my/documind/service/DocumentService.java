@@ -2,7 +2,6 @@ package my.documind.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import my.documind.config.MemoryLogger;
 import my.documind.domain.*;
 import my.documind.dto.DocumentRequest;
 import my.documind.dto.DocumentResponse;
@@ -11,6 +10,8 @@ import my.documind.event.DocumentUploadedEvent;
 import my.documind.exception.*;
 import my.documind.repository.DocumentAiResultRepository;
 import my.documind.repository.DocumentRepository;
+import my.documind.upload.PdfExtractionResult;
+import my.documind.upload.UploadFile;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -27,6 +28,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -41,7 +43,6 @@ public class DocumentService {
     private final DocumentAiResultRepository documentAiResultRepository;
     private final DocumentRepository documentRepository;
     private final FileStorageService fileStorageService;
-    private final MemoryLogger memoryLogger;
     private final PdfTextExtractor pdfTextExtractor;
     private final UserService userService;
 
@@ -69,38 +70,23 @@ public class DocumentService {
         User user = userService.getByEmail(email);
         validateDailyUploadLimit(user, files.size());
         List<Document> documents = new ArrayList<>();
-        List<Future<String>> futures = new ArrayList<>();
+        List<Future<PdfExtractionResult>> futures = new ArrayList<>();
         List<String> storedFilenames = new ArrayList<>();
         boolean failed = false;
         for (MultipartFile file : files) {
             validateFile(file);
             String storedFilename = fileStorageService.store(file);
             storedFilenames.add(storedFilename);
-            Future<String> future = pdfExecutor.submit(() -> {
-                memoryLogger.logMemory("PDF 추출 시작. file=" + file.getOriginalFilename());
-                String text = pdfTextExtractor.extractText(fileStorageService.getPath(storedFilename));
-                memoryLogger.logMemory("PDF 추출 완료. file=" + file.getOriginalFilename()
-                        + ", length=" + text.length());
-                return text;
-            });
+            Future<PdfExtractionResult> future = pdfExecutor.submit(() ->
+                    pdfTextExtractor.extractText(new UploadFile(file, storedFilename)));
             futures.add(future);
         }
         try {
-            for (int i = 0; i < files.size(); i++) {
-                String storedFilename = storedFilenames.get(i);
+            for (Future<PdfExtractionResult> future : futures) {
                 try {
-                    MultipartFile file = files.get(i);
-                    String text = futures.get(i).get();
-                    Document document = Document.builder()
-                            .originalFilename(file.getOriginalFilename())
-                            .storedFilename(storedFilename)
-                            .contentType(file.getContentType())
-                            .fileSize(file.getSize())
-                            .user(user)
-                            .status(DocumentStatus.UPLOADED)
-                            .extractedText(text == null ? "" : text)
-                            .build();
-                    documents.add(document);
+                    PdfExtractionResult result = future.get();
+                    String text = Optional.ofNullable(result.text()).orElse("");
+                    documents.add(Document.from(result.withText(text), user));
                 } catch (InterruptedException e) {
                     failed = true;
                     Thread.currentThread().interrupt();
@@ -133,7 +119,6 @@ public class DocumentService {
         }
         List<Document> savedDocuments = documentRepository.saveAll(documents);
         log.info("문서 업로드 완료. email={}, savedDocumentCount={}", email, savedDocuments.size());
-        memoryLogger.logMemory("문서 업로드 완료.");
         savedDocuments.forEach(document ->
                 eventPublisher.publishEvent(new DocumentUploadedEvent(document.getId())));
         log.debug("이벤트 발행 완료. email={}", email);

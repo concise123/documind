@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import my.documind.upload.PdfExtractionResult;
+import my.documind.upload.UploadFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +53,19 @@ public class Document extends BaseEntity {
     @Builder.Default
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DocumentAiResult> aiResults = new ArrayList<>();
+
+    public static Document from(PdfExtractionResult result, User user) {
+        UploadFile uploadFile = result.uploadFile();
+        return Document.builder()
+                .originalFilename(uploadFile.file().getOriginalFilename())
+                .storedFilename(uploadFile.storedFilename())
+                .contentType(uploadFile.file().getContentType())
+                .fileSize(uploadFile.file().getSize())
+                .user(user)
+                .status(DocumentStatus.UPLOADED)
+                .extractedText(result.text())
+                .build();
+    }
 
     public void startProcessing() {
         this.status = DocumentStatus.PROCESSING;

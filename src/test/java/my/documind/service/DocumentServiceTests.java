@@ -1,12 +1,13 @@
 package my.documind.service;
 
-import my.documind.config.MemoryLogger;
 import my.documind.event.DocumentUploadedEvent;
 import my.documind.exception.*;
 import my.documind.domain.Document;
 import my.documind.domain.DocumentStatus;
 import my.documind.domain.User;
 import my.documind.repository.DocumentRepository;
+import my.documind.upload.PdfExtractionResult;
+import my.documind.upload.UploadFile;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,9 +44,6 @@ class DocumentServiceTests {
     private FileStorageService fileStorageService;
 
     @Mock
-    private MemoryLogger memoryLogger;
-
-    @Mock
     private PdfTextExtractor pdfExtractor;
 
     @Mock
@@ -66,11 +64,14 @@ class DocumentServiceTests {
 
     private MultipartFile file;
 
+    private PdfExtractionResult result;
+
     @BeforeEach
     void setUp() {
         email = "test@test.com";
         user = createUser();
         file = mock(MultipartFile.class);
+        result = new PdfExtractionResult(new UploadFile(file, "uuid.pdf"), "text");
 
         when(userService.getByEmail(email))
                 .thenReturn(user);
@@ -99,12 +100,12 @@ class DocumentServiceTests {
                 .thenReturn("application/pdf");
 
         when(pdfExtractor.extractText(any()))
-                .thenReturn("text");
+                .thenReturn(result);
 
         when(pdfExecutor.submit(any(Callable.class)))
                 .thenAnswer(invocation -> {
-                    Callable<String> task = invocation.getArgument(0);
-                    FutureTask<String> future = new FutureTask<>(task);
+                    Callable<PdfExtractionResult> task = invocation.getArgument(0);
+                    FutureTask<PdfExtractionResult> future = new FutureTask<>(task);
                     future.run();
                     return future;
                 });
@@ -139,12 +140,12 @@ class DocumentServiceTests {
                 .thenReturn("application/pdf");
 
         when(pdfExtractor.extractText(any()))
-                .thenReturn("text");
+                .thenReturn(result);
 
         when(pdfExecutor.submit(any(Callable.class)))
                 .thenAnswer(invocation -> {
-                    Callable<String> task = invocation.getArgument(0);
-                    FutureTask<String> future = new FutureTask<>(task);
+                    Callable<PdfExtractionResult> task = invocation.getArgument(0);
+                    FutureTask<PdfExtractionResult> future = new FutureTask<>(task);
                     future.run();
                     return future;
                 });
@@ -230,12 +231,12 @@ class DocumentServiceTests {
                 .thenReturn(1L);
 
         when(pdfExtractor.extractText(any()))
-                .thenReturn("text");
+                .thenReturn(result);
 
         when(pdfExecutor.submit(any(Callable.class)))
                 .thenAnswer(invocation -> {
-                    Callable<String> task = invocation.getArgument(0);
-                    FutureTask<String> future = new FutureTask<>(task);
+                    Callable<PdfExtractionResult> task = invocation.getArgument(0);
+                    FutureTask<PdfExtractionResult> future = new FutureTask<>(task);
                     future.run();
                     return future;
                 });
