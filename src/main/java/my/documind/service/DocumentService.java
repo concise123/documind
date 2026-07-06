@@ -10,16 +10,15 @@ import my.documind.event.DocumentUploadedEvent;
 import my.documind.exception.*;
 import my.documind.repository.DocumentAiResultRepository;
 import my.documind.repository.DocumentRepository;
+import my.documind.upload.PdfBatchRunner;
 import my.documind.upload.PdfExtractionResult;
 import my.documind.upload.UploadFile;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,8 +28,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 @Service
 @Log4j2
@@ -43,11 +40,8 @@ public class DocumentService {
     private final DocumentAiResultRepository documentAiResultRepository;
     private final DocumentRepository documentRepository;
     private final FileStorageService fileStorageService;
-    private final PdfTextExtractor pdfTextExtractor;
+    private final PdfBatchRunner pdfBatchRunner;
     private final UserService userService;
-
-    @Qualifier("pdfExecutor")
-    private final ThreadPoolTaskExecutor pdfExecutor;
 
     @Value("${document.daily-upload-limit}")
     private int dailyUploadLimit;
@@ -55,13 +49,15 @@ public class DocumentService {
     /**
      * PDF 문서를 업로드하고 저장한다.
      *
-     * <p>업로드된 파일을 하나씩 순회하며 저장하고 각 파일에 대한 텍스트 추출 작업을 비동기로 Future에 제출한다.
-     * 모든 Future의 결과를 수집한 후 문서 정보를 DB에 저장한다.
+     * <p>업로드된 파일을 저장한 후 텍스트를 추출하고 문서 정보를 DB에 저장한다.
      * 문서 저장이 완료되면 AI 요약 생성을 위해 {@code DocumentUploadedEvent}를 발행한다.</p>
      *
      * @param files 업로드할 PDF 파일
      * @param email 업로드한 사용자 이메일
      * @throws UserNotFoundException 사용자를 찾을 수 없는 경우
+     * @throws DailyUploadLimitExceededException 일일 업로드 제한을 초과한 경우
+     * @throws FileEmptyException 빈 파일을 업로드한 경우
+     * @throws InvalidFileException PDF 형식이 아닌 파일을 업로드한 경우
      * @throws FileException 파일 읽기 또는 저장에 실패한 경우
      */
     @Transactional
@@ -69,53 +65,32 @@ public class DocumentService {
         log.info("문서 업로드 시작. email={}, fileCount={}", email, files.size());
         User user = userService.getByEmail(email);
         validateDailyUploadLimit(user, files.size());
-        List<Document> documents = new ArrayList<>();
-        List<Future<PdfExtractionResult>> futures = new ArrayList<>();
         List<String> storedFilenames = new ArrayList<>();
-        boolean failed = false;
+        List<UploadFile> uploadFiles = new ArrayList<>();
+        List<Document> documents;
         for (MultipartFile file : files) {
             validateFile(file);
             String storedFilename = fileStorageService.store(file);
             storedFilenames.add(storedFilename);
-            Future<PdfExtractionResult> future = pdfExecutor.submit(() ->
-                    pdfTextExtractor.extractText(new UploadFile(file, storedFilename)));
-            futures.add(future);
+            uploadFiles.add(new UploadFile(file, storedFilename));
         }
         try {
-            for (Future<PdfExtractionResult> future : futures) {
+            List<PdfExtractionResult> results = pdfBatchRunner.extractAll(uploadFiles);
+            documents = results.stream()
+                    .map(result -> {
+                        String text = Optional.ofNullable(result.text()).orElse("");
+                        return Document.from(result.withText(text), user);
+                    })
+                    .toList();
+        } catch (RuntimeException e) {
+            for (String filename : storedFilenames) {
                 try {
-                    PdfExtractionResult result = future.get();
-                    String text = Optional.ofNullable(result.text()).orElse("");
-                    documents.add(Document.from(result.withText(text), user));
-                } catch (InterruptedException e) {
-                    failed = true;
-                    Thread.currentThread().interrupt();
-                    throw new RuntimeException(ErrorMessage.PDF_PROCESS_INTERRUPTED.getMessage(), e);
-                } catch (ExecutionException e) {
-                    failed = true;
-                    Throwable cause = e.getCause();
-                    if (cause instanceof FileException fe) {
-                        throw fe;
-                    }
-                    if (cause instanceof RuntimeException re) {
-                        throw re;
-                    }
-                    throw new RuntimeException(cause);
-                } catch (Exception e) {
-                    failed = true;
-                    throw new RuntimeException(e);
+                    fileStorageService.delete(filename);
+                } catch (FileException fe) {
+                    log.warn("파일 정리 작업 실패", fe);
                 }
             }
-        } finally {
-            if (failed) {
-                for (String filename : storedFilenames) {
-                    try {
-                        fileStorageService.delete(filename);
-                    } catch (Exception e) {
-                        log.warn("파일 정리 작업 실패", e);
-                    }
-                }
-            }
+            throw e;
         }
         List<Document> savedDocuments = documentRepository.saveAll(documents);
         log.info("문서 업로드 완료. email={}, savedDocumentCount={}", email, savedDocuments.size());

@@ -6,6 +6,7 @@ import my.documind.domain.Document;
 import my.documind.domain.DocumentStatus;
 import my.documind.domain.User;
 import my.documind.repository.DocumentRepository;
+import my.documind.upload.PdfBatchRunner;
 import my.documind.upload.PdfExtractionResult;
 import my.documind.upload.UploadFile;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,17 +17,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -44,16 +42,10 @@ class DocumentServiceTests {
     private FileStorageService fileStorageService;
 
     @Mock
-    private PdfTextExtractor pdfExtractor;
+    private PdfBatchRunner pdfBatchRunner;
 
     @Mock
     private UserService userService;
-
-    @Mock
-    private ThreadPoolTaskExecutor pdfExecutor;
-
-    @Mock
-    private Future<String> future;
 
     @InjectMocks
     private DocumentService documentService;
@@ -64,14 +56,11 @@ class DocumentServiceTests {
 
     private MultipartFile file;
 
-    private PdfExtractionResult result;
-
     @BeforeEach
     void setUp() {
         email = "test@test.com";
         user = createUser();
         file = mock(MultipartFile.class);
-        result = new PdfExtractionResult(new UploadFile(file, "uuid.pdf"), "text");
 
         when(userService.getByEmail(email))
                 .thenReturn(user);
@@ -99,22 +88,11 @@ class DocumentServiceTests {
         when(file.getContentType())
                 .thenReturn("application/pdf");
 
-        when(pdfExtractor.extractText(any()))
-                .thenReturn(result);
-
-        when(pdfExecutor.submit(any(Callable.class)))
-                .thenAnswer(invocation -> {
-                    Callable<PdfExtractionResult> task = invocation.getArgument(0);
-                    FutureTask<PdfExtractionResult> future = new FutureTask<>(task);
-                    future.run();
-                    return future;
-                });
-
         // when
         documentService.upload(List.of(file), email);
 
         // then
-        verify(pdfExtractor).extractText(any());
+        verify(pdfBatchRunner).extractAll(anyList());
         verify(fileStorageService).store(file);
         verify(documentRepository).saveAll(anyList());
         verify(documentRepository).saveAll(
@@ -128,7 +106,7 @@ class DocumentServiceTests {
 
     @Test
     @DisplayName("문서 저장 후 AI 요약 생성을 요청한다")
-    void shouldPublishDocumentUploadedEvent_whenDocumentIsSaved() {
+    void shouldPublishDocumentUploadedEvent_whenDocumentIsSaved() throws IOException {
         // given
         when(file.isEmpty())
                 .thenReturn(false);
@@ -139,16 +117,12 @@ class DocumentServiceTests {
         when(file.getContentType())
                 .thenReturn("application/pdf");
 
-        when(pdfExtractor.extractText(any()))
-                .thenReturn(result);
+        String storedFilename = "uuid.pdf";
+        UploadFile uploadFile = new UploadFile(file, storedFilename);
+        PdfExtractionResult result = new PdfExtractionResult(uploadFile, "text");
 
-        when(pdfExecutor.submit(any(Callable.class)))
-                .thenAnswer(invocation -> {
-                    Callable<PdfExtractionResult> task = invocation.getArgument(0);
-                    FutureTask<PdfExtractionResult> future = new FutureTask<>(task);
-                    future.run();
-                    return future;
-                });
+        when(pdfBatchRunner.extractAll(anyList()))
+                .thenReturn(List.of(result));
 
         when(documentRepository.saveAll(anyList()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -203,7 +177,7 @@ class DocumentServiceTests {
     }
 
     @Test
-    @DisplayName("하루 업로드 제한을 초과하면 업로드를 실패한다")
+    @DisplayName("일일 업로드 제한을 초과하면 업로드를 실패한다")
     void shouldThrowException_whenDailyUploadLimitExceeded() {
         // given
         when(documentRepository.countByUserAndRegDateAfter(eq(user), any(LocalDateTime.class)))
@@ -215,7 +189,7 @@ class DocumentServiceTests {
     }
 
     @Test
-    @DisplayName("하루 업로드 제한 이내이면 문서를 정상 업로드한다")
+    @DisplayName("일일 업로드 제한 이내이면 문서를 정상 업로드한다")
     void shouldUploadSuccessfully_whenWithinDailyUploadLimit() {
         // given
         when(file.isEmpty())
@@ -229,17 +203,6 @@ class DocumentServiceTests {
 
         when(documentRepository.countByUserAndRegDateAfter(eq(user), any(LocalDateTime.class)))
                 .thenReturn(1L);
-
-        when(pdfExtractor.extractText(any()))
-                .thenReturn(result);
-
-        when(pdfExecutor.submit(any(Callable.class)))
-                .thenAnswer(invocation -> {
-                    Callable<PdfExtractionResult> task = invocation.getArgument(0);
-                    FutureTask<PdfExtractionResult> future = new FutureTask<>(task);
-                    future.run();
-                    return future;
-                });
 
         // when & then
         assertThatCode(() -> documentService.upload(List.of(file), user.getEmail()))
