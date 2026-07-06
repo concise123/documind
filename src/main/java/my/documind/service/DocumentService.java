@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -75,16 +74,11 @@ public class DocumentService {
         boolean failed = false;
         for (MultipartFile file : files) {
             validateFile(file);
-            byte[] fileBytes;
-            try {
-                fileBytes = file.getBytes();
-            } catch (IOException e) {
-                throw new FileException(ErrorMessage.FILE_READ_FAILED, e);
-            }
-            storedFilenames.add(fileStorageService.store(file));
+            String storedFilename = fileStorageService.store(file);
+            storedFilenames.add(storedFilename);
             Future<String> future = pdfExecutor.submit(() -> {
                 memoryLogger.logMemory("PDF 추출 시작. file=" + file.getOriginalFilename());
-                String text = pdfTextExtractor.extractText(fileBytes);
+                String text = pdfTextExtractor.extractText(fileStorageService.getPath(storedFilename));
                 memoryLogger.logMemory("PDF 추출 완료. file=" + file.getOriginalFilename()
                         + ", length=" + text.length());
                 return text;

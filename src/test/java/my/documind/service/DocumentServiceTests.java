@@ -113,7 +113,7 @@ class DocumentServiceTests {
         documentService.upload(List.of(file), email);
 
         // then
-        verify(pdfExtractor).extractText(file.getBytes());
+        verify(pdfExtractor).extractText(any());
         verify(fileStorageService).store(file);
         verify(documentRepository).saveAll(anyList());
         verify(documentRepository).saveAll(
