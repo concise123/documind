@@ -25,7 +25,7 @@ public class LocalFileStorageService implements FileStorageService {
         String storedFilename = UUID.randomUUID() // 파일명 충돌 방지를 위해 UUID 사용
                 + "." + StringUtils.getFilenameExtension(file.getOriginalFilename());
         Path uploadPath = Paths.get(uploadDir);
-        Path path = Paths.get(uploadDir, storedFilename);
+        Path path = getPath(storedFilename);
         try {
             // 업로드 디렉터리가 없으면 생성
             if (!Files.exists(uploadPath)) {
@@ -42,9 +42,14 @@ public class LocalFileStorageService implements FileStorageService {
     @Override
     public void delete(String storedFilename) {
         try {
-            Files.deleteIfExists(Paths.get(uploadDir, storedFilename));
+            Files.deleteIfExists(getPath(storedFilename));
         } catch (IOException e) {
             throw new FileException(ErrorMessage.FILE_DELETE_FAILED, e);
         }
+    }
+
+    @Override
+    public Path getPath(String storedFilename) {
+        return Paths.get(uploadDir, storedFilename);
     }
 }

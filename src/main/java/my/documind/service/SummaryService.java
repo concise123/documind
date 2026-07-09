@@ -3,7 +3,6 @@ package my.documind.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import my.documind.client.OpenAiClient;
-import my.documind.domain.Document;
 import my.documind.dto.SummaryResponse;
 import org.springframework.stereotype.Service;
 
@@ -14,12 +13,8 @@ public class SummaryService {
     private static final int MAX_INPUT_LENGTH = 5000;
     private final OpenAiClient openAiClient;
 
-    public SummaryResponse generateSummary(Document document) {
-        Long documentId = document.getId();
-        log.debug("AI 요약 요청. documentId={}", documentId);
-        SummaryResponse response = openAiClient.summarize(trimToLimit(document.getExtractedText()));
-        log.debug("AI 요약 응답 수신. documentId={}", documentId);
-        return response;
+    public SummaryResponse generateSummary(String text) {
+        return openAiClient.summarize(trimToLimit(text));
     }
 
     /**

@@ -26,15 +26,13 @@ class SummaryServiceTests {
     @DisplayName("문서 내용으로 요약 결과를 생성한다")
     void shouldCreateSummaryResult_whenDocumentContentExists() {
         // given
-        Document document = Document.builder()
-                .extractedText("원본 텍스트")
-                .build();
+        String extractedText = "원본 텍스트";
 
         when(openAiClient.summarize(anyString()))
                 .thenReturn(new SummaryResponse("요약 결과", "gpt-4o-mini", 10));
 
         // when
-        SummaryResponse response = summaryService.generateSummary(document);
+        SummaryResponse response = summaryService.generateSummary(extractedText);
 
         // then
         assertThat(response.content()).isEqualTo("요약 결과");

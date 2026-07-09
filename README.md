@@ -85,11 +85,22 @@ service
  	 └─ PDF 텍스트 추출
  ├─ LocalFileStorageService
  	 ├─ 파일 저장
- 	 └─ 파일 삭제
- ├─ AsyncSummaryService
- 	 └─ AI 요약 프로세스 지휘
+ 	 ├─ 파일 삭제
+ 	 └─ 파일 경로 조회
  └─ SummaryService
  	 └─ AI 요약
+
+workflow
+ └─ SummaryWorkflowService
+ 	 └─ AI 요약 프로세스 지휘
+ 	 
+event.listener
+ └─ SummaryEventListener
+ 	 └─ 이벤트 수신 및 비동기 실행
+	 
+upload
+ └─ PdfBatchRunner
+ 	 └─ PDF 추출 병렬 실행 
 
 repository
  └─ 데이터 접근
@@ -113,9 +124,7 @@ config
  ├─ Spring Security 설정
  ├─ 비동기 설정
  ├─ RestClient 설정
- ├─ 비동기 작업용 스레드 풀 설정
- ├─ 메모리 사용량 관련 기능
- └─ 초기화 작업 트리거
+ └─ 비동기 작업용 스레드 풀 설정
 
 auth
  └─ CustomUserDetailsService
@@ -175,9 +184,9 @@ client
 사용자 요청
  → DocumentController
  → DocumentService
- → PDF 파일 로컬 스토리지에 저장
- → PDF 텍스트 추출 (병렬)
- → 모든 PDF 추출 완료 대기
+ → FileStorageService
+ → PdfBatchRunner
+ → PdfExtractor
  → Document 저장
  → 이벤트 발행
 ```
@@ -186,7 +195,18 @@ client
 
 ```
 이벤트 발생
- → AsyncSummaryService
+ → SummaryEventListener
+ → SummaryWorkflowService
+ → SummaryService
+ → OpenAiClient
+ → OpenAI API
+ → DocumentAiResult 저장
+```
+
+```
+사용자 요청
+ → DocumentController
+ → SummaryWorkflowService
  → SummaryService
  → OpenAiClient
  → OpenAI API
@@ -201,6 +221,7 @@ client
 * 업로드 완료 후 비동기 이벤트를 통해 요약 작업 수행
 * 트랜잭션 커밋 이후에만 요약 작업이 실행되도록 구성하여 데이터 정합성 확보
 * AI 처리 시간이 사용자 요청에 영향을 주지 않도록 설계
+* 각 계층의 책임을 명확히 분리하여 유지보수성과 확장성을 높임
 
 ### 문서 처리 상태 관리
 
@@ -208,6 +229,7 @@ client
 * UPLOADED → PROCESSING → COMPLETED / FAILED 흐름으로 관리
 * AI 처리 결과를 상태로 표현하여 현재 진행 상황을 확인할 수 있도록 구성
 * 실패 상황 발생 시 FAILED 상태로 전환하여 예외 상황을 명확하게 관리
+* 처리 상태에 따라 사용자 요청 기반 요약 지원
 
 ### 확장성을 고려한 AI 연동 설계
 
@@ -216,11 +238,14 @@ client
 * 문서 요약 기능을 기반으로 질의응답, 검색, 임베딩 저장 기능을 확장할 수 있도록 구성
 * 기능 추가 시 기존 업로드 및 요약 로직의 변경을 최소화할 수 있도록 설계
 
-### PDF 처리 구조 설계
+### PDF 추출 처리 구조 설계
 
-* PDF 텍스트 추출 기능을 PdfTextExtractor로 분리
-* DocumentService는 문서 업로드 흐름을 담당하고, PdfTextExtractor는 텍스트 추출만 담당하도록 단일 책임 원칙 적용
+* DocumentService는 문서 업로드 흐름을 담당
+* BatchRunner를 통한 병렬 처리
+* PdfTextExtractor는 단일 PDF 추출만 담당
+* 저장된 파일 기반 PDF 추출
 * PDF 추출 실패 시 업로드를 중단하여 데이터 일관성 보장
+* PDF 추출 실패 시 저장된 파일을 일괄 삭제
 
 ### 예외 처리
 

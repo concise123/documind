@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import my.documind.upload.PdfExtractionResult;
+import my.documind.upload.UploadFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,8 +47,25 @@ public class Document extends BaseEntity {
     private String extractedText;
 
     @Builder.Default
+    @Column(nullable = false)
+    private Integer retryCount = 0;
+
+    @Builder.Default
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DocumentAiResult> aiResults = new ArrayList<>();
+
+    public static Document from(PdfExtractionResult result, User user) {
+        UploadFile uploadFile = result.uploadFile();
+        return Document.builder()
+                .originalFilename(uploadFile.file().getOriginalFilename())
+                .storedFilename(uploadFile.storedFilename())
+                .contentType(uploadFile.file().getContentType())
+                .fileSize(uploadFile.file().getSize())
+                .user(user)
+                .status(DocumentStatus.UPLOADED)
+                .extractedText(result.text())
+                .build();
+    }
 
     public void startProcessing() {
         this.status = DocumentStatus.PROCESSING;
@@ -58,6 +77,15 @@ public class Document extends BaseEntity {
 
     public void fail() {
         this.status = DocumentStatus.FAILED;
+    }
+
+    public void retryProcessing() {
+        this.retryCount++;
+        this.status = DocumentStatus.PROCESSING;
+    }
+
+    public boolean isProcessing() {
+        return this.status == DocumentStatus.PROCESSING;
     }
 
     public void addAiResult(DocumentAiResult aiResult) {
