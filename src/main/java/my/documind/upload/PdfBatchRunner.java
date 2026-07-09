@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import my.documind.exception.ErrorMessage;
 import my.documind.exception.FileException;
+import my.documind.exception.PdfProcessingBusyException;
 import my.documind.service.PdfTextExtractor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @Log4j2
@@ -39,7 +41,11 @@ public class PdfBatchRunner {
     private Future<PdfExtractionResult> submitExtraction(UploadFile uploadFile) {
         log.debug("PDF 추출 작업 제출. active={}, pool={}, queue={}", pdfExecutor.getActiveCount(),
                 pdfExecutor.getPoolSize(), pdfExecutor.getThreadPoolExecutor().getQueue().size());
-        return pdfExecutor.submit(() -> pdfTextExtractor.extractText(uploadFile));
+        try {
+            return pdfExecutor.submit(() -> pdfTextExtractor.extractText(uploadFile));
+        } catch (RejectedExecutionException e) {
+            throw new PdfProcessingBusyException();
+        }
     }
 
     private PdfExtractionResult await(Future<PdfExtractionResult> future) {
