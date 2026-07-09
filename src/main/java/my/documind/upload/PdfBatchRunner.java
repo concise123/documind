@@ -11,10 +11,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Log4j2
 @RequiredArgsConstructor
@@ -39,8 +36,7 @@ public class PdfBatchRunner {
     }
 
     private Future<PdfExtractionResult> submitExtraction(UploadFile uploadFile) {
-        log.debug("PDF 추출 작업 제출. active={}, pool={}, queue={}", pdfExecutor.getActiveCount(),
-                pdfExecutor.getPoolSize(), pdfExecutor.getThreadPoolExecutor().getQueue().size());
+        logExecutorStatus(uploadFile);
         try {
             return pdfExecutor.submit(() -> pdfTextExtractor.extractText(uploadFile));
         } catch (RejectedExecutionException e) {
@@ -64,5 +60,18 @@ public class PdfBatchRunner {
             }
             throw new RuntimeException(cause);
         }
+    }
+
+    private void logExecutorStatus(UploadFile uploadFile) {
+        if (!log.isDebugEnabled()) {
+            return;
+        }
+        ThreadPoolExecutor executor = pdfExecutor.getThreadPoolExecutor();
+        if (executor == null) {
+            return;
+        }
+        log.debug("PDF 추출 작업 제출. file={}, active={}, pool={}, queue={}",
+                uploadFile.file().getOriginalFilename(), pdfExecutor.getActiveCount(),
+                pdfExecutor.getPoolSize(), pdfExecutor.getThreadPoolExecutor().getQueue().size());
     }
 }

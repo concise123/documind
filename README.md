@@ -124,9 +124,7 @@ config
  ├─ Spring Security 설정
  ├─ 비동기 설정
  ├─ RestClient 설정
- ├─ 비동기 작업용 스레드 풀 설정
- ├─ 메모리 사용량 관련 기능
- └─ 초기화 작업 트리거
+ └─ 비동기 작업용 스레드 풀 설정
 
 auth
  └─ CustomUserDetailsService

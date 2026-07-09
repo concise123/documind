@@ -2,7 +2,6 @@ package my.documind.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import my.documind.config.MemoryLogger;
 import my.documind.exception.ErrorMessage;
 import my.documind.exception.FileException;
 import my.documind.upload.PdfExtractionResult;
@@ -23,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class PdfTextExtractor {
     private final FileStorageService fileStorageService;
-    private final MemoryLogger memoryLogger;
 
     public PdfExtractionResult extractText(UploadFile uploadFile) {
         long start = System.nanoTime();
@@ -32,9 +30,7 @@ public class PdfTextExtractor {
         try (RandomAccessRead rar = new RandomAccessReadBufferedFile(path.toFile());
              PDDocument document = Loader.loadPDF(rar)) {
             PDFTextStripper stripper = new PDFTextStripper();
-            memoryLogger.logMemory("PDF 추출 시작. file=" + originalFilename);
             String text = stripper.getText(document);
-            memoryLogger.logMemory("PDF 추출 완료. file=" + originalFilename + ", length=" + text.length());
             return new PdfExtractionResult(uploadFile, text);
         } catch (IOException e) {
             throw new FileException(ErrorMessage.PDF_TEXT_EXTRACTION_FAILED, e);
