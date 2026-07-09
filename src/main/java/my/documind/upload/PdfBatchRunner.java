@@ -1,6 +1,7 @@
 package my.documind.upload;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import my.documind.exception.ErrorMessage;
 import my.documind.exception.FileException;
 import my.documind.service.PdfTextExtractor;
@@ -11,7 +12,9 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
+@Log4j2
 @RequiredArgsConstructor
 @Component
 public class PdfBatchRunner {
@@ -21,15 +24,21 @@ public class PdfBatchRunner {
     private final ThreadPoolTaskExecutor pdfExecutor;
 
     public List<PdfExtractionResult> extractAll(List<UploadFile> uploadFiles) {
+        long start = System.nanoTime();
         List<Future<PdfExtractionResult>> futures = uploadFiles.stream()
                 .map(this::submitExtraction)
                 .toList();
-        return futures.stream()
+        List<PdfExtractionResult> results = futures.stream()
                 .map(this::await)
                 .toList();
+        long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+        log.debug("PDF 전체 추출 시간. duration={}ms", duration);
+        return results;
     }
 
     private Future<PdfExtractionResult> submitExtraction(UploadFile uploadFile) {
+        log.debug("PDF 추출 작업 제출. active={}, pool={}, queue={}", pdfExecutor.getActiveCount(),
+                pdfExecutor.getPoolSize(), pdfExecutor.getThreadPoolExecutor().getQueue().size());
         return pdfExecutor.submit(() -> pdfTextExtractor.extractText(uploadFile));
     }
 
