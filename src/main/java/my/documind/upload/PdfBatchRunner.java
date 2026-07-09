@@ -1,17 +1,19 @@
 package my.documind.upload;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import my.documind.exception.ErrorMessage;
 import my.documind.exception.FileException;
+import my.documind.exception.PdfProcessingBusyException;
 import my.documind.service.PdfTextExtractor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
+@Log4j2
 @RequiredArgsConstructor
 @Component
 public class PdfBatchRunner {
@@ -21,16 +23,25 @@ public class PdfBatchRunner {
     private final ThreadPoolTaskExecutor pdfExecutor;
 
     public List<PdfExtractionResult> extractAll(List<UploadFile> uploadFiles) {
+        long start = System.nanoTime();
         List<Future<PdfExtractionResult>> futures = uploadFiles.stream()
                 .map(this::submitExtraction)
                 .toList();
-        return futures.stream()
+        List<PdfExtractionResult> results = futures.stream()
                 .map(this::await)
                 .toList();
+        long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+        log.debug("PDF 전체 추출 시간. duration={}ms", duration);
+        return results;
     }
 
     private Future<PdfExtractionResult> submitExtraction(UploadFile uploadFile) {
-        return pdfExecutor.submit(() -> pdfTextExtractor.extractText(uploadFile));
+        logExecutorStatus(uploadFile);
+        try {
+            return pdfExecutor.submit(() -> pdfTextExtractor.extractText(uploadFile));
+        } catch (RejectedExecutionException e) {
+            throw new PdfProcessingBusyException();
+        }
     }
 
     private PdfExtractionResult await(Future<PdfExtractionResult> future) {
@@ -49,5 +60,18 @@ public class PdfBatchRunner {
             }
             throw new RuntimeException(cause);
         }
+    }
+
+    private void logExecutorStatus(UploadFile uploadFile) {
+        if (!log.isDebugEnabled()) {
+            return;
+        }
+        ThreadPoolExecutor executor = pdfExecutor.getThreadPoolExecutor();
+        if (executor == null) {
+            return;
+        }
+        log.debug("PDF 추출 작업 제출. file={}, active={}, pool={}, queue={}",
+                uploadFile.file().getOriginalFilename(), pdfExecutor.getActiveCount(),
+                pdfExecutor.getPoolSize(), pdfExecutor.getThreadPoolExecutor().getQueue().size());
     }
 }

@@ -1,6 +1,5 @@
 package my.documind.service;
 
-import my.documind.config.MemoryLogger;
 import my.documind.upload.PdfExtractionResult;
 import my.documind.upload.UploadFile;
 import org.junit.jupiter.api.DisplayName;
@@ -22,9 +21,6 @@ import static org.mockito.Mockito.when;
 public class PdfTextExtractorTests {
     @Mock
     private FileStorageService fileStorageService;
-
-    @Mock
-    private MemoryLogger memoryLogger;
 
     @InjectMocks
     private PdfTextExtractor pdfTextExtractor;
