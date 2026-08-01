@@ -1,0 +1,99 @@
+package my.documind.document.controller;
+
+import lombok.RequiredArgsConstructor;
+import my.documind.document.dto.DocumentRequest;
+import my.documind.document.exception.SummaryAlreadyProcessingException;
+import my.documind.document.exception.SummaryRetryLimitExceededException;
+import my.documind.document.service.DocumentService;
+import my.documind.document.service.SummaryTriggerType;
+import my.documind.document.service.SummaryWorkflowService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.util.unit.DataSize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
+
+@Controller
+@RequestMapping("/document")
+@RequiredArgsConstructor
+public class DocumentController {
+    private final DocumentService documentService;
+    private final SummaryWorkflowService summaryWorkflowService;
+
+    @Value("${document.daily-upload-limit}")
+    private int dailyUploadLimit;
+
+    @Value("${spring.servlet.multipart.max-request-size}")
+    private DataSize maxRequestSize;
+
+    @Value("${spring.servlet.multipart.max-file-size}")
+    private DataSize maxFileSize;
+
+    @Value("${document.summary.max-retry-count}")
+    private int maxRetryCount;
+
+    @PostMapping(value = "/upload")
+    public String uploadDocuments(@RequestParam List<MultipartFile> files, @AuthenticationPrincipal UserDetails userDetails,
+                             RedirectAttributes redirectAttributes) {
+        documentService.upload(files, userDetails.getUsername());
+        redirectAttributes.addFlashAttribute("message", "문서가 업로드되었습니다.");
+        return "redirect:/document/list";
+    }
+
+    @PostMapping("/delete/{id}")
+    public String deleteDocument(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails,
+                         RedirectAttributes redirectAttributes) {
+        documentService.delete(id, userDetails.getUsername());
+        redirectAttributes.addFlashAttribute("message", "문서가 삭제되었습니다.");
+        return "redirect:/document/list";
+    }
+
+    @GetMapping("/list")
+    public void showDocuments(@AuthenticationPrincipal UserDetails userDetails,
+                              DocumentRequest documentRequest, Model model) {
+        String email = userDetails.getUsername();
+        long todayUploadCount = documentService.getTodayUploadCount(email);
+        model.addAttribute("dailyUploadLimit", dailyUploadLimit);
+        model.addAttribute("maxRequestSize", maxRequestSize.toBytes());
+        model.addAttribute("maxFileSize", maxFileSize.toBytes());
+        model.addAttribute("todayUploadCount", todayUploadCount);
+        model.addAttribute("uploadLimitReached", dailyUploadLimit <= todayUploadCount);
+        model.addAttribute("remainingUploadCount", Math.max(0, dailyUploadLimit - todayUploadCount));
+        model.addAttribute("pageResponse", documentService.findDocuments(email, documentRequest));
+    }
+
+    @GetMapping("/detail/{id}")
+    public String showDocument(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, Model model) {
+        model.addAttribute("maxRetryCount", maxRetryCount);
+        model.addAttribute("document", documentService.findDocument(id, userDetails.getUsername()));
+        return "document/detail";
+    }
+
+    @PostMapping("/summary/retry/{id}")
+    public String retrySummary(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            summaryWorkflowService.processSummary(id, SummaryTriggerType.RETRY);
+        } catch (SummaryAlreadyProcessingException | SummaryRetryLimitExceededException e) {
+            redirectAttributes.addFlashAttribute("message", e.getMessage());
+        }
+        return "redirect:/document/detail/" + id;
+    }
+
+    @PostMapping("/summary/start/{id}")
+    public String startSummary(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            summaryWorkflowService.processSummary(id, SummaryTriggerType.START);
+        } catch (SummaryAlreadyProcessingException | SummaryRetryLimitExceededException e) {
+            redirectAttributes.addFlashAttribute("message", e.getMessage());
+        }
+        return "redirect:/document/detail/" + id;
+    }
+}

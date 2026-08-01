@@ -1,0 +1,55 @@
+package my.documind.storage;
+
+import lombok.extern.log4j.Log4j2;
+import my.documind.common.exception.ErrorMessage;
+import my.documind.storage.exception.FileStorageException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
+
+@Log4j2
+@Component
+public class LocalFileStorage implements FileStorage {
+    @Value("${document.upload-dir}")
+    private String uploadDir;
+
+    @Override
+    public String store(MultipartFile file) {
+        String storedFilename = UUID.randomUUID() // 파일명 충돌 방지를 위해 UUID 사용
+                + "." + StringUtils.getFilenameExtension(file.getOriginalFilename());
+        Path uploadPath = Paths.get(uploadDir);
+        Path path = getPath(storedFilename);
+        try {
+            // 업로드 디렉터리가 없으면 생성
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+            file.transferTo(path);
+            log.info("파일 저장 완료. path={}", path);
+            return storedFilename;
+        } catch (IOException e) {
+            throw new FileStorageException(ErrorMessage.FILE_SAVE_FAILED, e);
+        }
+    }
+
+    @Override
+    public void delete(String storedFilename) {
+        try {
+            Files.deleteIfExists(getPath(storedFilename));
+        } catch (IOException e) {
+            throw new FileStorageException(ErrorMessage.FILE_DELETE_FAILED, e);
+        }
+    }
+
+    @Override
+    public Path getPath(String storedFilename) {
+        return Paths.get(uploadDir, storedFilename);
+    }
+}
