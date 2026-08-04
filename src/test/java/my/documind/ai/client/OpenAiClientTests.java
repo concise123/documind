@@ -1,6 +1,5 @@
 package my.documind.ai.client;
 
-import my.documind.ai.client.OpenAiClient;
 import my.documind.ai.dto.OpenAiRequest;
 import my.documind.ai.dto.OpenAiResponse;
 import my.documind.ai.dto.SummaryResponse;
@@ -70,5 +69,39 @@ class OpenAiClientTests {
         assertThat(result.content()).isEqualTo("요약 결과");
         assertThat(result.model()).isEqualTo("gpt-4o-mini");
         assertThat(result.totalTokens()).isEqualTo(10);
+    }
+
+    @Test
+    @DisplayName("문서 질문 요청 결과를 반환한다")
+    void shouldReturnAnswer_AskIsCalled() {
+        // given
+        OpenAiResponse response = new OpenAiResponse(
+                List.of(new OpenAiResponse.Choice(
+                        new OpenAiResponse.Message("assistant", "답변"))
+                ),
+                "gpt-4o-mini",
+                new OpenAiResponse.Usage(10)
+        );
+
+        when(restClient.post())
+                .thenReturn(requestBodyUriSpec);
+
+        when(requestBodyUriSpec.uri("/v1/chat/completions"))
+                .thenReturn(requestBodySpec);
+
+        when(requestBodySpec.body(any(OpenAiRequest.class)))
+                .thenReturn(requestBodySpec);
+
+        when(requestBodySpec.retrieve())
+                .thenReturn(responseSpec);
+
+        when(responseSpec.body(OpenAiResponse.class))
+                .thenReturn(response);
+
+        // when
+        String result = openAiClient.ask("컨텍스트", "질문");
+
+        // then
+        assertThat(result).isEqualTo("답변");
     }
 }
