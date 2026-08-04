@@ -12,7 +12,7 @@ public enum ErrorMessage {
     FILE_EMPTY("파일을 선택해주세요."),
     INVALID_FILE_TYPE("PDF 파일만 업로드 가능합니다."),
     FILE_SIZE_EXCEEDED("파일 크기가 너무 큽니다."),
-    SUMMARY_TEXT_EMPTY("요약할 텍스트가 없습니다."),
+    CONTENT_EMPTY("문서 내용이 없습니다."),
     SUMMARY_RETRY_LIMIT_EXCEEDED("재시도 횟수를 초과했습니다."),
     SUMMARY_ALREADY_PROCESSING("이미 처리 중입니다."),
 

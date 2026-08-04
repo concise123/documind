@@ -10,17 +10,11 @@ import org.springframework.stereotype.Service;
 @Service
 @Log4j2
 public class SummaryService {
-    private static final int MAX_INPUT_LENGTH = 5000;
+    private final ContextBuilder contextBuilder;
     private final OpenAiClient openAiClient;
 
-    public SummaryResponse generateSummary(String text) {
-        return openAiClient.summarize(trimToLimit(text));
-    }
-
-    /**
-     * OpenAI 입력 토큰 초과를 방지하기 위해 텍스트를 최대 길이까지만 사용한다.
-     */
-    private String trimToLimit(String text) {
-        return text.length() > MAX_INPUT_LENGTH ? text.substring(0, MAX_INPUT_LENGTH) : text;
+    public SummaryResponse generateSummary(String content) {
+        String context = contextBuilder.build(content);
+        return openAiClient.summarize(context);
     }
 }

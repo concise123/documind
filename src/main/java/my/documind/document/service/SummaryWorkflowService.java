@@ -54,7 +54,6 @@ public class SummaryWorkflowService {
      * @param type START 또는 RETRY 트리거 타입
      * @throws DocumentNotFoundException 문서 조회에 실패한 경우
      * @throws SummaryAlreadyProcessingException 이미 처리 중인 경우
-     * @throws SummaryException 문서 내용이 없는 경우
      * @throws SummaryRetryLimitExceededException 재시도 횟수를 초과한 경우
      * @throws OpenAiConcurrencyLimitException OpenAI 동시성 제한을 초과한 경우
      */
@@ -62,7 +61,6 @@ public class SummaryWorkflowService {
     public void processSummary(Long documentId, SummaryTriggerType type) {
         Document document = find(documentId);
         validateNotProcessing(document);
-        validateDocument(document);
         if (type == SummaryTriggerType.RETRY) {
             validateRetry(document);
             document.retryProcessing();
@@ -99,14 +97,6 @@ public class SummaryWorkflowService {
     private void validateNotProcessing(Document document) {
         if (document.isProcessing()) {
             throw new SummaryAlreadyProcessingException();
-        }
-    }
-
-    private void validateDocument(Document document) {
-        String content = document.getExtractedText();
-        if (content == null || content.isBlank()) {
-            document.fail();
-            throw new SummaryException();
         }
     }
 

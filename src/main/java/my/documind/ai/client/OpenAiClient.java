@@ -14,12 +14,12 @@ import java.util.List;
 @RequiredArgsConstructor
 @Component
 public class OpenAiClient {
-    private final RestClient restClient;;
+    private final RestClient restClient;
 
-    public SummaryResponse summarize(String text) {
+    public SummaryResponse summarize(String context) {
         long start = System.currentTimeMillis();
         try {
-            OpenAiRequest request = createRequest(text);
+            OpenAiRequest request = createRequest(context);
             OpenAiResponse response = restClient.post()
                     .uri("/v1/chat/completions")
                     .body(request)
@@ -32,9 +32,9 @@ public class OpenAiClient {
         }
     }
 
-    private OpenAiRequest createRequest(String text) {
+    private OpenAiRequest createRequest(String context) {
         return new OpenAiRequest("gpt-4o-mini",
                 List.of(new OpenAiRequest.Message("system", "다음 문서를 3~5줄로 요약해줘."),
-                        new OpenAiRequest.Message("user", text)));
+                        new OpenAiRequest.Message("user", context)));
     }
 }

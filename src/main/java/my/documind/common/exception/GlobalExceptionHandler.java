@@ -2,6 +2,7 @@ package my.documind.common.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.log4j.Log4j2;
+import my.documind.ai.exception.EmptyContextException;
 import my.documind.auth.exception.UserNotFoundException;
 import my.documind.document.exception.*;
 import my.documind.pdf.exception.PdfExtractionException;
@@ -92,8 +93,8 @@ public class GlobalExceptionHandler {
         return "redirect:/document/list";
     }
 
-    @ExceptionHandler(SummaryException.class)
-    public String handleSummaryException(SummaryException e, HttpServletRequest request,
+    @ExceptionHandler(EmptyContextException.class)
+    public String handleEmptyContextException(EmptyContextException e, HttpServletRequest request,
                                          RedirectAttributes redirectAttributes) {
         log.warn("{} uri={}, method={}", e.getMessage(), request.getRequestURI(), request.getMethod(), e);
         redirectAttributes.addFlashAttribute("message", e.getMessage());
