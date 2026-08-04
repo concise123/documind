@@ -5,6 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import my.documind.ai.dto.OpenAiRequest;
 import my.documind.ai.dto.OpenAiResponse;
 import my.documind.ai.dto.SummaryResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -14,12 +15,17 @@ import java.util.List;
 @RequiredArgsConstructor
 @Component
 public class OpenAiClient {
+    private static final double SUMMARY_TEMPERATURE = 0.3;
+
     private final RestClient restClient;
+
+    @Value("${openai.model}")
+    private String openAiModel;
 
     public SummaryResponse summarize(String context) {
         long start = System.currentTimeMillis();
         try {
-            OpenAiRequest request = createRequest(context);
+            OpenAiRequest request = createRequest(context, SUMMARY_TEMPERATURE);
             OpenAiResponse response = restClient.post()
                     .uri("/v1/chat/completions")
                     .body(request)
@@ -32,9 +38,10 @@ public class OpenAiClient {
         }
     }
 
-    private OpenAiRequest createRequest(String context) {
+    private OpenAiRequest createRequest(String context, double temperature) {
         return new OpenAiRequest("gpt-4o-mini",
                 List.of(new OpenAiRequest.Message("system", "다음 문서를 3~5줄로 요약해줘."),
-                        new OpenAiRequest.Message("user", context)));
+                        new OpenAiRequest.Message("user", context)),
+                temperature);
     }
 }
