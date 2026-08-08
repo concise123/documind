@@ -171,6 +171,7 @@
                 questionInput.focus();
                 return;
             }
+            answer.textContent = '';
             showLoading(qaForm);
             try {
                 const response = await fetch(qaForm.action, {
