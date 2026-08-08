@@ -102,6 +102,24 @@
                             </div>
                         </div>
                     </div><!--tab content end-->
+                    <div class="mt-4 border p-4">
+                        <form id="qaForm" th:action="@{/qa/{id}(id=${document.id})}" method="post">
+                            <div class="fw-bold mb-2">💬 이 문서에 질문하기</div>
+                            <div class="input-group">
+                                <input type="text" name="question" required minlength="1" maxlength="500"
+                                       class="form-control" placeholder="이 문서에 대해 질문해보세요." value="">
+                                <button type="submit" class="btn btn-primary">↵</button>
+                            </div>
+                            <div id="qaResult" class="mt-4 pt-3 border-top d-none">
+                                <h6 class="fw-bold mb-3">&nbsp;AI 답변</h6>
+                                <p name="answer" class="mb-0" style="white-space: pre-line;"></p>
+                            </div>
+                            <div class="loading-indicator d-none align-items-center justify-content-center mt-3">
+                                <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
+                                <span>AI가 답변을 생성 중입니다.</span>
+                            </div>
+                        </form>
+                    </div>
                     <div class="my-4">
                         <div class="float-end">
                             <a th:href="@{/document/list}">목록</a>
@@ -114,17 +132,69 @@
 </div>
 
 <script layout:fragment="script" th:inline="javascript">
+    const qaForm = document.querySelector('#qaForm');
+    const questionInput = qaForm.querySelector('input[name="question"]');
+    const qaResult = document.querySelector('#qaResult');
+    const answer = document.querySelector('p[name="answer"]');
+
+    function showLoading(form) {
+        form.querySelector("button[type='submit']").classList.add("d-none");
+        const loading = form.querySelector(".loading-indicator");
+        loading.classList.remove("d-none");
+        loading.classList.add("d-flex");
+    }
+
+    function hideLoading(form) {
+        form.querySelector("button[type='submit']").classList.remove("d-none");
+        const loading = form.querySelector(".loading-indicator");
+        loading.classList.remove("d-flex");
+        loading.classList.add("d-none");
+    }
+
     function showLoadingOnSubmit(form) {
         if (!form) {
             return;
         }
         form.addEventListener("submit", () => {
-            form.querySelector("button[type='submit']").classList.add("d-none");
-            const loading = form.querySelector(".loading-indicator");
-            loading.classList.remove("d-none");
-            loading.classList.add("d-flex");
+            showLoading(form);
         });
     }
+
+    function initQaForm() {
+        if (!qaForm) {
+            return;
+        }
+        qaForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const question = questionInput.value;
+            if (!question) {
+                questionInput.focus();
+                return;
+            }
+            showLoading(qaForm);
+            try {
+                const response = await fetch(qaForm.action, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        question: questionInput.value
+                    })
+                });
+                const result = await response.json();
+                answer.textContent = result.answer;
+                qaResult.classList.remove("d-none");
+            } catch (error) {
+                console.error("Q&A 요청 실패", error);
+                alert("질문 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+            } finally {
+                hideLoading(qaForm);
+            }
+        });
+    }
+
     showLoadingOnSubmit(document.querySelector('#startSummaryForm'));
     showLoadingOnSubmit(document.querySelector('#retrySummaryForm'));
+    initQaForm();
 </script>
