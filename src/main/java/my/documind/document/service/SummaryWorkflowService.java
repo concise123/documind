@@ -18,6 +18,7 @@ import java.util.concurrent.Semaphore;
 @RequiredArgsConstructor
 @Log4j2
 public class SummaryWorkflowService {
+    private final DocumentChunkService chunkService;
     private final DocumentRepository documentRepository;
     private final SummaryService summaryService;
     private static final Semaphore OPENAI_SEMAPHORE = new Semaphore(3);
@@ -68,6 +69,7 @@ public class SummaryWorkflowService {
             document.startProcessing();
         }
         log.info("AI 요약 생성 시작. documentId={}, retryCount={}", documentId, document.getRetryCount());
+        chunkService.createChunksIfAbsent(document);
         boolean acquired = false;
         try {
             // 동시 실행 개수 제한 (과도한 리소스 사용 방지)

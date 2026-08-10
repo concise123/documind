@@ -23,6 +23,9 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class SummaryWorkflowServiceTests {
     @Mock
+    private DocumentChunkService chunkService;
+
+    @Mock
     private DocumentRepository documentRepository;
 
     @Mock
