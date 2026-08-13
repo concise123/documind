@@ -2,9 +2,7 @@ package my.documind.ai.client;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import my.documind.ai.dto.OpenAiRequest;
-import my.documind.ai.dto.OpenAiResponse;
-import my.documind.ai.dto.SummaryResponse;
+import my.documind.ai.dto.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -22,6 +20,9 @@ public class OpenAiClient {
 
     @Value("${openai.model}")
     private String openAiModel;
+
+    @Value("${openai.model.embedding}")
+    private String openAiEmbeddingModel;
 
     public SummaryResponse summarize(String context) {
         long start = System.currentTimeMillis();
@@ -80,5 +81,24 @@ public class OpenAiClient {
 
     private OpenAiRequest createRequest(List<OpenAiRequest.Message> messages, double temperature) {
         return new OpenAiRequest(openAiModel, messages, temperature);
+    }
+
+    public EmbeddingResponse createEmbedding(String text) {
+        long start = System.currentTimeMillis();
+        try {
+            EmbeddingRequest request = createEmbeddingRequest(text);
+            return restClient.post()
+                    .uri("/v1/embeddings")
+                    .body(request)
+                    .retrieve()
+                    .body(EmbeddingResponse.class);
+        } finally {
+            long duration = System.currentTimeMillis() - start;
+            log.info("OpenAI API 호출 시간. duration={}ms", duration);
+        }
+    }
+
+    private EmbeddingRequest createEmbeddingRequest(String text) {
+        return new EmbeddingRequest(openAiEmbeddingModel, text);
     }
 }

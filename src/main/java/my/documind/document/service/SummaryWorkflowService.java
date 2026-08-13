@@ -18,7 +18,9 @@ import java.util.concurrent.Semaphore;
 @RequiredArgsConstructor
 @Log4j2
 public class SummaryWorkflowService {
+    private final DocumentChunkService chunkService;
     private final DocumentRepository documentRepository;
+    private final DocumentEmbeddingService embeddingService;
     private final SummaryService summaryService;
     private static final Semaphore OPENAI_SEMAPHORE = new Semaphore(3);
 
@@ -68,6 +70,7 @@ public class SummaryWorkflowService {
             document.startProcessing();
         }
         log.info("AI 요약 생성 시작. documentId={}, retryCount={}", documentId, document.getRetryCount());
+        chunkService.createChunksIfAbsent(document);
         boolean acquired = false;
         try {
             // 동시 실행 개수 제한 (과도한 리소스 사용 방지)
@@ -75,6 +78,8 @@ public class SummaryWorkflowService {
             if (!acquired) {
                 throw new OpenAiConcurrencyLimitException();
             }
+            // Chunk Embedding 생성 위임
+            embeddingService.createEmbeddingsIfAbsent(document);
             // AI 요약 위임
             SummaryResponse response = summaryService.generateSummary(document.getExtractedText());
             log.info("AI 요약 생성 완료. documentId={}", documentId);
