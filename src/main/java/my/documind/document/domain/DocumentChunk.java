@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import my.documind.common.domain.BaseEntity;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Getter
@@ -27,4 +29,16 @@ public class DocumentChunk extends BaseEntity {
 
     @Column(nullable = false)
     private int chunkIndex;
+
+    @JdbcTypeCode(SqlTypes.VECTOR)
+    @Column(columnDefinition = "vector(1536)")
+    private float[] embedding;
+
+    public void updateEmbedding(float[] embedding) {
+        this.embedding = embedding;
+    }
+
+    public boolean hasEmbedding() {
+        return embedding != null;
+    }
 }

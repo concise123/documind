@@ -29,6 +29,9 @@ class SummaryWorkflowServiceTests {
     private DocumentRepository documentRepository;
 
     @Mock
+    private DocumentEmbeddingService embeddingService;
+
+    @Mock
     private SummaryService summaryService;
 
     @InjectMocks

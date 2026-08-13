@@ -20,6 +20,7 @@ import java.util.concurrent.Semaphore;
 public class SummaryWorkflowService {
     private final DocumentChunkService chunkService;
     private final DocumentRepository documentRepository;
+    private final DocumentEmbeddingService embeddingService;
     private final SummaryService summaryService;
     private static final Semaphore OPENAI_SEMAPHORE = new Semaphore(3);
 
@@ -77,6 +78,8 @@ public class SummaryWorkflowService {
             if (!acquired) {
                 throw new OpenAiConcurrencyLimitException();
             }
+            // Chunk Embedding 생성 위임
+            embeddingService.createEmbeddingsIfAbsent(document);
             // AI 요약 위임
             SummaryResponse response = summaryService.generateSummary(document.getExtractedText());
             log.info("AI 요약 생성 완료. documentId={}", documentId);
