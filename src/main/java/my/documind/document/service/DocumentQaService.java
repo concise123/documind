@@ -2,26 +2,25 @@ package my.documind.document.service;
 
 import lombok.RequiredArgsConstructor;
 import my.documind.ai.service.QaService;
-import my.documind.auth.domain.User;
+import my.documind.document.domain.DocumentChunk;
 import my.documind.document.dto.DocumentQaResponse;
-import my.documind.auth.service.UserService;
-import my.documind.document.domain.Document;
-import my.documind.document.exception.DocumentNotFoundException;
-import my.documind.document.repository.DocumentRepository;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
 public class DocumentQaService {
     private final QaService qaService;
-    private final DocumentRepository documentRepository;
-    private final UserService userService;
+    private final VectorSearchService vectorSearchService;
 
-    public DocumentQaResponse ask(Long documentId, String email, String question) {
-        User user = userService.getByEmail(email);
-        Document document = documentRepository.findByIdAndUser(documentId, user)
-                .orElseThrow(DocumentNotFoundException::new);
-        String answer = qaService.ask(document.getExtractedText(), question);
+    public DocumentQaResponse ask(Long documentId, String question) {
+        List<DocumentChunk> chunks = vectorSearchService.search(documentId, question);
+        String content = chunks.stream()
+                        .map(DocumentChunk::getContent)
+                        .collect(Collectors.joining("\n\n"));
+        String answer = qaService.ask(content, question);
         return new DocumentQaResponse(question, answer);
     }
 }
