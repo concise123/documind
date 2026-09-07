@@ -1,8 +1,8 @@
 package my.documind.document.service;
 
 import my.documind.ai.service.QaService;
-import my.documind.document.domain.DocumentChunk;
 import my.documind.document.dto.DocumentQaResponse;
+import my.documind.document.dto.VectorSearchResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +23,9 @@ class DocumentQaServiceTests {
     @Mock
     private VectorSearchService vectorSearchService;
 
+    @Mock
+    private RetrievalLogger retrievalLogger;
+
     @InjectMocks
     private DocumentQaService documentQaService;
 
@@ -33,12 +36,12 @@ class DocumentQaServiceTests {
         Long documentId = 1L;
         String question = "질문";
         String answer = "답변";
-        DocumentChunk chunk1 = createChunk("청크 1");
-        DocumentChunk chunk2 = createChunk("청크 2");
-        List<DocumentChunk> chunks = List.of(chunk1, chunk2);
+        List<VectorSearchResult> searchResults = List.of(
+                new VectorSearchResult(1L, "청크 1", 0, 0.12),
+                new VectorSearchResult(2L, "청크 2", 1, 0.34));
 
         when(vectorSearchService.search(documentId, question))
-                .thenReturn(chunks);
+                .thenReturn(searchResults);
 
         when(qaService.ask(any(), eq(question)))
                 .thenReturn(answer);
@@ -50,9 +53,5 @@ class DocumentQaServiceTests {
         assertThat(documentQaResponse.answer()).isEqualTo(answer);
         verify(vectorSearchService).search(documentId, question);
         verify(qaService).ask("청크 1\n\n청크 2", question);
-    }
-
-    private DocumentChunk createChunk(String content) {
-        return new DocumentChunk(null, null, content,0, null);
     }
 }
