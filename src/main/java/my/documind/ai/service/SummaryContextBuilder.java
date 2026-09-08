@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
  * 입력 텍스트 정규화 및 문자 수 제한을 담당한다.
  */
 @Component
-public class ContextBuilder {
+public class SummaryContextBuilder {
     private static final int MAX_CONTEXT_CHARACTERS = 5000;
 
     public String build(String content) {

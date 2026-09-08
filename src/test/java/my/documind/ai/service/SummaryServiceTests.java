@@ -18,7 +18,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class SummaryServiceTests {
     @Mock
-    private ContextBuilder contextBuilder;
+    private SummaryContextBuilder summaryContextBuilder;
 
     @Mock
     private OpenAiClient openAiClient;
@@ -33,7 +33,7 @@ class SummaryServiceTests {
         String extractedText = "원본 텍스트";
         String context = "정제한 텍스트";
 
-        when(contextBuilder.build(extractedText))
+        when(summaryContextBuilder.build(extractedText))
                 .thenReturn(context);
 
         when(openAiClient.summarize(anyString()))
@@ -51,7 +51,7 @@ class SummaryServiceTests {
     @DisplayName("문서 분석에 필요한 내용이 없으면 요약에 실패한다")
     void shouldPropagateEmptyContextException_whenContextGenerationFails() {
         // given
-        when(contextBuilder.build(any()))
+        when(summaryContextBuilder.build(any()))
                 .thenThrow(new EmptyContextException());
 
         // when & then

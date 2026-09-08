@@ -15,9 +15,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class QaServiceTests {
     @Mock
-    private ContextBuilder contextBuilder;
-
-    @Mock
     private OpenAiClient openAiClient;
 
     @InjectMocks
