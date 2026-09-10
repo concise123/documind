@@ -2,8 +2,8 @@ package my.documind.document.service;
 
 import lombok.RequiredArgsConstructor;
 import my.documind.ai.service.EmbeddingService;
+import my.documind.document.dto.VectorSearchResult;
 import my.documind.document.util.VectorUtils;
-import my.documind.document.domain.DocumentChunk;
 import my.documind.document.repository.DocumentChunkRepository;
 import org.springframework.stereotype.Service;
 
@@ -16,9 +16,17 @@ public class VectorSearchService {
     private final EmbeddingService embeddingService;
     private final DocumentChunkRepository chunkRepository;
 
-    public List<DocumentChunk> search(Long documentId, String question) {
+    public List<VectorSearchResult> search(Long documentId, String question) {
         float[] queryEmbedding = embeddingService.embed(question);
         String vector = VectorUtils.toVectorString(queryEmbedding);
-        return chunkRepository.findSimilarChunks(documentId, vector, DEFAULT_TOP_K);
+        return chunkRepository.findSimilarChunks(documentId, vector, DEFAULT_TOP_K)
+                .stream()
+                .map(result -> new VectorSearchResult(
+                        result.getChunkId(),
+                        result.getContent(),
+                        result.getChunkIndex(),
+                        result.getDistance()
+                ))
+                .toList();
     }
 }

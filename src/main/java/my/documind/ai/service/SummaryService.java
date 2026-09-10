@@ -10,11 +10,11 @@ import org.springframework.stereotype.Service;
 @Service
 @Log4j2
 public class SummaryService {
-    private final ContextBuilder contextBuilder;
+    private final SummaryContextBuilder summaryContextBuilder;
     private final OpenAiClient openAiClient;
 
     public SummaryResponse generateSummary(String content) {
-        String context = contextBuilder.build(content);
+        String context = summaryContextBuilder.build(content);
         return openAiClient.summarize(context);
     }
 }

@@ -5,6 +5,7 @@ import my.documind.auth.repository.UserRepository;
 import my.documind.document.domain.Document;
 import my.documind.document.domain.DocumentChunk;
 import my.documind.document.domain.DocumentStatus;
+import my.documind.document.repository.projection.VectorSearchProjection;
 import my.documind.document.util.VectorUtils;
 import my.documind.support.AbstractPostgresRepositoryTests;
 import org.junit.jupiter.api.DisplayName;
@@ -46,10 +47,13 @@ public class DocumentChunkRepositoryFtsTests extends AbstractPostgresRepositoryT
         String queryEmbedding = VectorUtils.toVectorString(embedding(0));
 
         // when
-        List<DocumentChunk> result = chunkRepository.findSimilarChunks(document.getId(), queryEmbedding, 2);
+        List<VectorSearchProjection> result = chunkRepository.findSimilarChunks(document.getId(), queryEmbedding, 2);
 
         // then
-        assertThat(result).containsExactly(similar, different);
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getChunkId()).isEqualTo(similar.getId());
+        assertThat(result.get(1).getChunkId()).isEqualTo(different.getId());
+        assertThat(result.get(0).getDistance()).isLessThan(result.get(1).getDistance());
     }
 
     @Test
@@ -64,7 +68,7 @@ public class DocumentChunkRepositoryFtsTests extends AbstractPostgresRepositoryT
         String queryEmbedding = VectorUtils.toVectorString(embedding(0));
 
         // when
-        List<DocumentChunk> result = chunkRepository.findSimilarChunks(document.getId(), queryEmbedding, 2);
+        List<VectorSearchProjection> result = chunkRepository.findSimilarChunks(document.getId(), queryEmbedding, 2);
 
         // then
         assertThat(result).hasSize(2);

@@ -7,11 +7,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Service
 public class QaService {
-    private final ContextBuilder contextBuilder;
     private final OpenAiClient openAiClient;
 
     public String ask(String content, String question) {
-        String context = contextBuilder.build(content);
-        return openAiClient.ask(context, question);
+        return openAiClient.ask(content, question);
     }
 }
