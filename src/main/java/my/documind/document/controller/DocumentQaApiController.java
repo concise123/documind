@@ -5,16 +5,15 @@ import lombok.RequiredArgsConstructor;
 import my.documind.document.dto.DocumentQaRequest;
 import my.documind.document.dto.DocumentQaResponse;
 import my.documind.document.service.DocumentQaService;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
-@RequestMapping("/qa")
+@RestController
+@RequestMapping("/api/v1/document/{id}/qa")
 @RequiredArgsConstructor
-public class DocumentQaController {
+public class DocumentQaApiController {
     private final DocumentQaService documentQAService;
 
-    @PostMapping("/{id}")
+    @PostMapping
     @ResponseBody
     public DocumentQaResponse askQuestion(@PathVariable Long id, @Valid @RequestBody DocumentQaRequest request) {
         return documentQAService.ask(id, request.getQuestion());

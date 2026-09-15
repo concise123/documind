@@ -103,7 +103,7 @@
                         </div>
                     </div><!--tab content end-->
                     <div class="mt-4 border p-4">
-                        <form id="qaForm" th:action="@{/qa/{id}(id=${document.id})}" method="post">
+                        <form id="qaForm" th:action="@{/api/v1/document/{id}/qa(id=${document.id})}" method="post">
                             <div class="fw-bold mb-2">💬 이 문서에 질문하기</div>
                             <div class="input-group">
                                 <input type="text" name="question" required minlength="1" maxlength="500"
