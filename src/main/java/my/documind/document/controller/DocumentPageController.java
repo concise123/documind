@@ -22,7 +22,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/document")
 @RequiredArgsConstructor
-public class DocumentController {
+public class DocumentPageController {
     private final DocumentService documentService;
     private final SummaryWorkflowService summaryWorkflowService;
 
