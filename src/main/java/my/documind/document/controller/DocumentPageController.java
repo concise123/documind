@@ -1,13 +1,17 @@
 package my.documind.document.controller;
 
 import lombok.RequiredArgsConstructor;
+import my.documind.common.dto.PageResponse;
+import my.documind.document.domain.Document;
 import my.documind.document.dto.DocumentRequest;
+import my.documind.document.dto.DocumentResponse;
 import my.documind.document.exception.SummaryAlreadyProcessingException;
 import my.documind.document.exception.SummaryRetryLimitExceededException;
 import my.documind.document.service.DocumentService;
 import my.documind.document.service.SummaryTriggerType;
 import my.documind.document.service.SummaryWorkflowService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -59,13 +63,33 @@ public class DocumentPageController {
                               DocumentRequest documentRequest, Model model) {
         String email = userDetails.getUsername();
         long todayUploadCount = documentService.getTodayUploadCount(email);
+        Page<Document> page = documentService.findDocuments(email, documentRequest);
         model.addAttribute("dailyUploadLimit", dailyUploadLimit);
         model.addAttribute("maxRequestSize", maxRequestSize.toBytes());
         model.addAttribute("maxFileSize", maxFileSize.toBytes());
         model.addAttribute("todayUploadCount", todayUploadCount);
         model.addAttribute("uploadLimitReached", dailyUploadLimit <= todayUploadCount);
         model.addAttribute("remainingUploadCount", Math.max(0, dailyUploadLimit - todayUploadCount));
-        model.addAttribute("pageResponse", documentService.findDocuments(email, documentRequest));
+        model.addAttribute("pageResponse", toPageResponse(page, documentRequest));
+    }
+
+    private PageResponse<DocumentResponse> toPageResponse(Page<Document> page, DocumentRequest documentRequest) {
+        List<DocumentResponse> dtoList = page.getContent()
+                .stream()
+                .map(document -> DocumentResponse.builder()
+                        .id(document.getId())
+                        .originalFilename(document.getOriginalFilename())
+                        .fileSize(document.getFileSize())
+                        .regDate(document.getRegDate())
+                        .documentRequest(documentRequest)
+                        .build())
+                .toList();
+        return PageResponse.<DocumentResponse>withAll()
+                .page(page.getNumber() + 1)
+                .size(page.getSize())
+                .total((int)page.getTotalElements())
+                .dtoList(dtoList)
+                .build();
     }
 
     @GetMapping("/detail/{id}")
