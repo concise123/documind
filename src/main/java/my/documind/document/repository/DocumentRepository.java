@@ -14,6 +14,7 @@ import java.util.Optional;
 public interface DocumentRepository extends JpaRepository<Document, Long> {
     Page<Document> findByUser(User user, Pageable pageable);
     Optional<Document> findByIdAndUser(Long id, User user);
+    boolean existsByIdAndUser(Long id, User user);
     long countByUserAndRegDateAfter(User user, LocalDateTime regDate);
     @Query(value = """
     SELECT *
