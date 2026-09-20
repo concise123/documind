@@ -2,7 +2,7 @@ package my.documind.pdf;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.ErrorCode;
 import my.documind.pdf.exception.PdfExtractionException;
 import my.documind.storage.FileStorage;
 import my.documind.storage.UploadFile;
@@ -33,7 +33,7 @@ public class PdfTextExtractor {
             String text = stripper.getText(document);
             return new PdfExtractionResult(uploadFile, text);
         } catch (IOException e) {
-            throw new PdfExtractionException(ErrorMessage.PDF_TEXT_EXTRACTION_FAILED, e);
+            throw new PdfExtractionException(ErrorCode.PDF_TEXT_EXTRACTION_FAILED, e);
         } finally {
             long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
             log.info("PDF 추출 시간. file={}, duration={}ms", originalFilename, duration);

@@ -3,7 +3,7 @@ package my.documind.document.service;
 import my.documind.ai.service.QaService;
 import my.documind.auth.domain.User;
 import my.documind.auth.service.UserService;
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.ErrorCode;
 import my.documind.document.dto.DocumentQaResponse;
 import my.documind.document.dto.VectorSearchResult;
 import my.documind.document.exception.DocumentNotFoundException;
@@ -105,7 +105,7 @@ class DocumentQaServiceTests {
         // when & then
         assertThatThrownBy(() -> documentQaService.ask(documentId, email, question))
                 .isInstanceOf(DocumentNotFoundException.class)
-                .hasMessage(ErrorMessage.DOCUMENT_NOT_FOUND.getMessage());
+                .hasMessage(ErrorCode.DOCUMENT_NOT_FOUND.getMessage());
         verify(documentRepository).existsByIdAndUser(documentId, user);
     }
 }

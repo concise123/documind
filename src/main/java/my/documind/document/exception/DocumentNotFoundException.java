@@ -1,9 +1,10 @@
 package my.documind.document.exception;
 
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.BusinessException;
+import my.documind.common.exception.ErrorCode;
 
-public class DocumentNotFoundException extends RuntimeException {
+public class DocumentNotFoundException extends BusinessException {
     public DocumentNotFoundException() {
-        super(ErrorMessage.DOCUMENT_NOT_FOUND.getMessage());
+        super(ErrorCode.DOCUMENT_NOT_FOUND);
     }
 }

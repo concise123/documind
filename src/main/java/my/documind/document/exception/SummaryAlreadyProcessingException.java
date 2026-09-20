@@ -1,9 +1,10 @@
 package my.documind.document.exception;
 
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.BusinessException;
+import my.documind.common.exception.ErrorCode;
 
-public class SummaryAlreadyProcessingException extends RuntimeException {
+public class SummaryAlreadyProcessingException extends BusinessException {
     public SummaryAlreadyProcessingException() {
-        super(ErrorMessage.SUMMARY_ALREADY_PROCESSING.getMessage());
+        super(ErrorCode.SUMMARY_ALREADY_PROCESSING);
     }
 }

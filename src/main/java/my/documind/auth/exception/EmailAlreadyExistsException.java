@@ -1,9 +1,10 @@
 package my.documind.auth.exception;
 
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.BusinessException;
+import my.documind.common.exception.ErrorCode;
 
-public class EmailAlreadyExistsException extends RuntimeException {
+public class EmailAlreadyExistsException extends BusinessException {
     public EmailAlreadyExistsException() {
-        super(ErrorMessage.EMAIL_ALREADY_EXISTS.getMessage());
+        super(ErrorCode.EMAIL_ALREADY_EXISTS);
     }
 }

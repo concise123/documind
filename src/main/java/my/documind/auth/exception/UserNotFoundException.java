@@ -1,9 +1,10 @@
 package my.documind.auth.exception;
 
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.BusinessException;
+import my.documind.common.exception.ErrorCode;
 
-public class UserNotFoundException extends RuntimeException {
+public class UserNotFoundException extends BusinessException {
     public UserNotFoundException() {
-        super(ErrorMessage.USER_SESSION_INVALID.getMessage());
+        super(ErrorCode.USER_SESSION_INVALID);
     }
 }

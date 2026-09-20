@@ -1,7 +1,7 @@
 package my.documind.auth.service;
 
 import lombok.RequiredArgsConstructor;
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.ErrorCode;
 import my.documind.auth.domain.User;
 import my.documind.auth.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,7 +18,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
                     .orElseThrow(() ->
-                            new UsernameNotFoundException(ErrorMessage.USER_NOT_FOUND.getMessage()));
+                            new UsernameNotFoundException(ErrorCode.USER_NOT_FOUND.getMessage()));
 
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())

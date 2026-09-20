@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
     public String handleFileStorageException(FileStorageException e, HttpServletRequest request,
                                              RedirectAttributes redirectAttributes) {
         log.error("{} uri={}, method={}", e.getMessage(), request.getRequestURI(), request.getMethod(), e);
-        switch (e.getErrorMessage()) {
+        switch (e.getErrorCode()) {
             case FILE_DELETE_FAILED -> {
                 redirectAttributes.addFlashAttribute("message", e.getMessage());
             }
@@ -80,7 +80,7 @@ public class GlobalExceptionHandler {
     public String handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e, HttpServletRequest request,
                                                        RedirectAttributes redirectAttributes) {
         log.warn("{} uri={}, method={}", e.getMessage(), request.getRequestURI(), request.getMethod(), e);
-        redirectAttributes.addFlashAttribute("message", ErrorMessage.FILE_SIZE_EXCEEDED.getMessage());
+        redirectAttributes.addFlashAttribute("message", ErrorCode.FILE_SIZE_EXCEEDED.getMessage());
         redirectAttributes.addFlashAttribute("reopenUploadModal", true);
         return "redirect:/document/list";
     }
@@ -120,7 +120,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public String handleException(Exception e, HttpServletRequest request, RedirectAttributes redirectAttributes) {
         log.error("{} uri={}, method={}", e.getMessage(), request.getRequestURI(), request.getMethod(), e);
-        redirectAttributes.addFlashAttribute("message", ErrorMessage.INTERNAL_SERVER_ERROR.getMessage());
+        redirectAttributes.addFlashAttribute("message", ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
         return "redirect:/";
     }
 }
