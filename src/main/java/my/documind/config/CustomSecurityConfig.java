@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 @Configuration
 @RequiredArgsConstructor
@@ -19,7 +20,8 @@ public class CustomSecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, ApiAuthenticationEntryPoint apiAuthenticationEntryPoint)
+            throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
@@ -37,6 +39,10 @@ public class CustomSecurityConfig {
                         .usernameParameter("email")
                         .defaultSuccessUrl("/", true)
                         .permitAll()
+                )
+                .exceptionHandling(exception -> exception
+                        .defaultAuthenticationEntryPointFor(apiAuthenticationEntryPoint,
+                                PathPatternRequestMatcher.withDefaults().matcher("/api/**"))
                 )
                 .logout(logout -> logout
                         .logoutUrl("/user/logout")

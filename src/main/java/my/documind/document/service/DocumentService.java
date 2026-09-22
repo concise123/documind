@@ -70,7 +70,7 @@ public class DocumentService {
      * @throws FileStorageException 파일 읽기 또는 저장에 실패한 경우
      */
     @Transactional
-    public void upload(List<MultipartFile> files, String email) {
+    public List<Document> upload(List<MultipartFile> files, String email) {
         log.info("문서 업로드 시작. email={}, fileCount={}", email, files.size());
         User user = userService.getByEmail(email);
         validateDailyUploadLimit(user, files.size());
@@ -98,6 +98,7 @@ public class DocumentService {
         savedDocuments.forEach(document ->
                 eventPublisher.publishEvent(new DocumentUploadedEvent(document.getId())));
         log.debug("이벤트 발행 완료. email={}", email);
+        return savedDocuments;
     }
 
     public long getTodayUploadCount(String email) {

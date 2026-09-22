@@ -5,6 +5,6 @@ import my.documind.common.exception.ErrorCode;
 
 public class UserNotFoundException extends BusinessException {
     public UserNotFoundException() {
-        super(ErrorCode.USER_SESSION_INVALID);
+        super(ErrorCode.AUTHENTICATION_REQUIRED);
     }
 }

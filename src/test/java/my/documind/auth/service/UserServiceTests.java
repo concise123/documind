@@ -103,6 +103,6 @@ public class UserServiceTests {
         // when & then
         assertThatThrownBy(() -> userService.getByEmail("test@test.com"))
                 .isInstanceOf(UserNotFoundException.class)
-                .hasMessage(ErrorCode.USER_SESSION_INVALID.getMessage());
+                .hasMessage(ErrorCode.AUTHENTICATION_REQUIRED.getMessage());
     }
 }

@@ -1,4 +1,4 @@
-package my.documind.document.controller;
+package my.documind.document.controller.web;
 
 import lombok.RequiredArgsConstructor;
 import my.documind.common.dto.PageResponse;

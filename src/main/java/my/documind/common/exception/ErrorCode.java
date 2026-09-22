@@ -9,11 +9,12 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
     // 400 잘못된 요청
     CONTENT_EMPTY("AI_400_001", "문서 내용이 없습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_REQUEST("COMMON_400_001", "잘못된 요청입니다.", HttpStatus.BAD_REQUEST),
     FILE_EMPTY("FILE_400_001", "파일을 선택해주세요.", HttpStatus.BAD_REQUEST),
     INVALID_FILE_TYPE("FILE_400_002", "PDF 파일만 업로드 가능합니다.", HttpStatus.BAD_REQUEST),
 
     // 401 권한 없음
-    USER_SESSION_INVALID("AUTH_401_001", "다시 로그인해 주세요.", HttpStatus.UNAUTHORIZED),
+    AUTHENTICATION_REQUIRED("AUTH_401_001", "로그인해 주세요.", HttpStatus.UNAUTHORIZED),
 
     // 404 요청한 리소스를 찾을 수 없음
     DOCUMENT_NOT_FOUND("DOC_404_001", "문서를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
