@@ -131,7 +131,7 @@ public class DocumentApiControllerTests {
     @Test
     @DisplayName("인증되지 않은 사용자는 문서 목록을 조회할 수 없다")
     void shouldReturnUnauthorized_whenUserIsUnauthenticated() throws Exception {
-        ErrorCode errorCode = ErrorCode.AUTHENTICATION_REQUIRED;
+        ErrorCode errorCode = ErrorCode.API_AUTHENTICATION_REQUIRED;
 
         // when & then
         mockMvc.perform(get("/api/v1/document"))

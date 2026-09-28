@@ -26,7 +26,7 @@ public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.AUTHENTICATION_REQUIRED);
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.API_AUTHENTICATION_REQUIRED);
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }
 }

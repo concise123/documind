@@ -15,6 +15,7 @@ public enum ErrorCode {
 
     // 401 권한 없음
     AUTHENTICATION_REQUIRED("AUTH_401_001", "로그인해 주세요.", HttpStatus.UNAUTHORIZED),
+    API_AUTHENTICATION_REQUIRED("AUTH_401_002", "API 인증이 필요합니다.", HttpStatus.UNAUTHORIZED),
 
     // 404 요청한 리소스를 찾을 수 없음
     DOCUMENT_NOT_FOUND("DOC_404_001", "문서를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),

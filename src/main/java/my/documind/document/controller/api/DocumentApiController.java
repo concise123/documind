@@ -1,6 +1,7 @@
 package my.documind.document.controller.api;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import my.documind.common.dto.PageApiResponse;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@SecurityRequirement(name = "bearerAuth")
 @Tag(name = "Document", description = "문서 관리 API")
 @RestController
 @RequestMapping("/api/v1/document")
