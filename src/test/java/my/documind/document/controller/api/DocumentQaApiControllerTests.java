@@ -1,6 +1,8 @@
 package my.documind.document.controller.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import my.documind.auth.jwt.JwtAuthenticationFilter;
+import my.documind.auth.jwt.JwtTokenProvider;
 import my.documind.common.exception.ErrorCode;
 import my.documind.config.ApiAuthenticationEntryPoint;
 import my.documind.config.CustomSecurityConfig;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,7 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(DocumentQaApiController.class)
 @Import({
         CustomSecurityConfig.class,
-        ApiAuthenticationEntryPoint.class
+        ApiAuthenticationEntryPoint.class,
+        JwtAuthenticationFilter.class
 })
 public class DocumentQaApiControllerTests {
     @Autowired
@@ -38,6 +42,12 @@ public class DocumentQaApiControllerTests {
 
     @MockitoBean
     private DocumentQaService documentQAService;
+
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider;
+
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     private Long documentId;
 
@@ -67,7 +77,8 @@ public class DocumentQaApiControllerTests {
 
     @Test
     @DisplayName("질문이 비어 있으면 보낼 수 없다")
-    @WithMockUser void shouldReturnBadRequest_whenQuestionIsEmpty() throws Exception {
+    @WithMockUser
+    void shouldReturnBadRequest_whenQuestionIsEmpty() throws Exception {
         ErrorCode errorCode = ErrorCode.INVALID_REQUEST;
 
         // given
