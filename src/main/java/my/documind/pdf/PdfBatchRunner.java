@@ -2,7 +2,7 @@ package my.documind.pdf;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.ErrorCode;
 import my.documind.storage.exception.FileStorageException;
 import my.documind.pdf.exception.PdfProcessingBusyException;
 import my.documind.storage.UploadFile;
@@ -49,7 +49,7 @@ public class PdfBatchRunner {
             return future.get();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException(ErrorMessage.PDF_PROCESS_INTERRUPTED.getMessage(), e);
+            throw new RuntimeException(ErrorCode.PDF_PROCESS_INTERRUPTED.getMessage(), e);
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
             if (cause instanceof FileStorageException fe) {

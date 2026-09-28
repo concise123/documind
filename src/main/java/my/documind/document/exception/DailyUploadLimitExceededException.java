@@ -1,11 +1,12 @@
 package my.documind.document.exception;
 
 import lombok.Getter;
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.BusinessException;
+import my.documind.common.exception.ErrorCode;
 
 @Getter
-public class DailyUploadLimitExceededException extends RuntimeException {
+public class DailyUploadLimitExceededException extends BusinessException {
     public DailyUploadLimitExceededException() {
-        super(ErrorMessage.DAILY_UPLOAD_LIMIT_EXCEEDED.getMessage());
+        super(ErrorCode.DAILY_UPLOAD_LIMIT_EXCEEDED);
     }
 }

@@ -1,7 +1,7 @@
 package my.documind.document.service;
 
 import my.documind.auth.service.UserService;
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.ErrorCode;
 import my.documind.document.event.DocumentUploadedEvent;
 import my.documind.document.exception.DailyUploadLimitExceededException;
 import my.documind.document.exception.DocumentNotFoundException;
@@ -150,7 +150,7 @@ class DocumentServiceTests {
         // when & then
         assertThatThrownBy(() -> documentService.upload(List.of(file), user.getEmail()))
                 .isInstanceOf(FileEmptyException.class)
-                .hasMessage(ErrorMessage.FILE_EMPTY.getMessage());
+                .hasMessage(ErrorCode.FILE_EMPTY.getMessage());
     }
 
     @Test
@@ -166,7 +166,7 @@ class DocumentServiceTests {
         // when & then
         assertThatThrownBy(() -> documentService.upload(List.of(file), user.getEmail()))
                 .isInstanceOf(InvalidFileException.class)
-                .hasMessage(ErrorMessage.INVALID_FILE_TYPE.getMessage());
+                .hasMessage(ErrorCode.INVALID_FILE_TYPE.getMessage());
     }
 
     @Test
@@ -179,7 +179,7 @@ class DocumentServiceTests {
         // when & then
         assertThatThrownBy(() ->documentService.delete(1L, user.getEmail()))
                 .isInstanceOf(DocumentNotFoundException.class)
-                .hasMessage(ErrorMessage.DOCUMENT_NOT_FOUND.getMessage());
+                .hasMessage(ErrorCode.DOCUMENT_NOT_FOUND.getMessage());
     }
 
     @Test

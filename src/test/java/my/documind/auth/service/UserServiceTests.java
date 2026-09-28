@@ -1,7 +1,7 @@
 package my.documind.auth.service;
 
 import my.documind.auth.exception.EmailAlreadyExistsException;
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.ErrorCode;
 import my.documind.auth.exception.UserNotFoundException;
 import my.documind.auth.domain.User;
 import my.documind.auth.dto.UserSignupRequest;
@@ -87,7 +87,7 @@ public class UserServiceTests {
         assertThatThrownBy(() ->
                 userService.signup(userSignupRequest))
                 .isInstanceOf(EmailAlreadyExistsException.class)
-                .hasMessage(ErrorMessage.EMAIL_ALREADY_EXISTS.getMessage());
+                .hasMessage(ErrorCode.EMAIL_ALREADY_EXISTS.getMessage());
 
         verify(userRepository, never())
                 .save(any(User.class));
@@ -103,6 +103,6 @@ public class UserServiceTests {
         // when & then
         assertThatThrownBy(() -> userService.getByEmail("test@test.com"))
                 .isInstanceOf(UserNotFoundException.class)
-                .hasMessage(ErrorMessage.USER_SESSION_INVALID.getMessage());
+                .hasMessage(ErrorCode.AUTHENTICATION_REQUIRED.getMessage());
     }
 }

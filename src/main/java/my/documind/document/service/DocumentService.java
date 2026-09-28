@@ -10,7 +10,6 @@ import my.documind.document.domain.Document;
 import my.documind.document.domain.DocumentAiResult;
 import my.documind.document.dto.DocumentRequest;
 import my.documind.document.dto.DocumentResponse;
-import my.documind.common.dto.PageResponse;
 import my.documind.document.event.DocumentUploadedEvent;
 import my.documind.document.exception.DailyUploadLimitExceededException;
 import my.documind.document.exception.DocumentNotFoundException;
@@ -71,7 +70,7 @@ public class DocumentService {
      * @throws FileStorageException 파일 읽기 또는 저장에 실패한 경우
      */
     @Transactional
-    public void upload(List<MultipartFile> files, String email) {
+    public List<Document> upload(List<MultipartFile> files, String email) {
         log.info("문서 업로드 시작. email={}, fileCount={}", email, files.size());
         User user = userService.getByEmail(email);
         validateDailyUploadLimit(user, files.size());
@@ -99,6 +98,7 @@ public class DocumentService {
         savedDocuments.forEach(document ->
                 eventPublisher.publishEvent(new DocumentUploadedEvent(document.getId())));
         log.debug("이벤트 발행 완료. email={}", email);
+        return savedDocuments;
     }
 
     public long getTodayUploadCount(String email) {
@@ -156,34 +156,16 @@ public class DocumentService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<DocumentResponse> findDocuments(String email, DocumentRequest documentRequest) {
+    public Page<Document> findDocuments(String email, DocumentRequest documentRequest) {
         User user = userService.getByEmail(email);
         int page = documentRequest.getPage();
         String keyword = documentRequest.getKeyword();
-        Page<Document> result;
         if (keyword == null || keyword.isBlank()) {
             Pageable pageable = PageRequest.of(page - 1, PAGE_SIZE, Sort.by("regDate").descending());
-            result = documentRepository.findByUser(user, pageable);
-        } else {
-            Pageable pageable = PageRequest.of(page - 1, PAGE_SIZE);
-            result = documentRepository.searchByUserAndKeyword(user.getId(), keyword.trim(), pageable);
+            return documentRepository.findByUser(user, pageable);
         }
-        List<DocumentResponse> dtoList = result.getContent()
-                .stream()
-                .map(document -> DocumentResponse.builder()
-                        .id(document.getId())
-                        .originalFilename(document.getOriginalFilename())
-                        .fileSize(document.getFileSize())
-                        .regDate(document.getRegDate())
-                        .documentRequest(documentRequest)
-                        .build())
-                .toList();
-        return PageResponse.<DocumentResponse>withAll()
-                .page(page)
-                .size(PAGE_SIZE)
-                .total((int)result.getTotalElements())
-                .dtoList(dtoList)
-                .build();
+        Pageable pageable = PageRequest.of(page - 1, PAGE_SIZE);
+        return documentRepository.searchByUserAndKeyword(user.getId(), keyword.trim(), pageable);
     }
 
     @Transactional(readOnly = true)

@@ -1,11 +1,12 @@
 package my.documind.ai.exception;
 
 import lombok.Getter;
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.BusinessException;
+import my.documind.common.exception.ErrorCode;
 
 @Getter
-public class EmptyContextException extends RuntimeException {
+public class EmptyContextException extends BusinessException {
     public EmptyContextException() {
-        super(ErrorMessage.CONTENT_EMPTY.getMessage());
+        super(ErrorCode.CONTENT_EMPTY);
     }
 }

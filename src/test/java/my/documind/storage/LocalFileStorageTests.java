@@ -1,6 +1,6 @@
 package my.documind.storage;
 
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.ErrorCode;
 import my.documind.storage.exception.FileStorageException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -59,6 +59,6 @@ public class LocalFileStorageTests {
         // when & then
         assertThatThrownBy(() -> fileStorage.store(file))
                 .isInstanceOf(FileStorageException.class)
-                .hasMessage(ErrorMessage.FILE_SAVE_FAILED.getMessage());
+                .hasMessage(ErrorCode.FILE_SAVE_FAILED.getMessage());
     }
 }

@@ -2,6 +2,7 @@ package my.documind.document.repository;
 
 import my.documind.auth.domain.User;
 import my.documind.auth.repository.UserRepository;
+import my.documind.config.JpaAuditingConfig;
 import my.documind.document.domain.Document;
 import my.documind.document.domain.DocumentChunk;
 import my.documind.document.domain.DocumentStatus;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -26,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@Import(JpaAuditingConfig.class)
 public class DocumentChunkRepositoryFtsTests extends AbstractPostgresRepositoryTests {
     @Autowired
     DocumentChunkRepository chunkRepository;

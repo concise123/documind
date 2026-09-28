@@ -1,9 +1,10 @@
 package my.documind.document.exception;
 
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.BusinessException;
+import my.documind.common.exception.ErrorCode;
 
-public class SummaryRetryLimitExceededException extends RuntimeException {
+public class SummaryRetryLimitExceededException extends BusinessException {
     public SummaryRetryLimitExceededException() {
-        super(ErrorMessage.SUMMARY_RETRY_LIMIT_EXCEEDED.getMessage());
+        super(ErrorCode.SUMMARY_RETRY_LIMIT_EXCEEDED);
     }
 }

@@ -1,7 +1,7 @@
 package my.documind.storage;
 
 import lombok.extern.log4j.Log4j2;
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.ErrorCode;
 import my.documind.storage.exception.FileStorageException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -35,7 +35,7 @@ public class LocalFileStorage implements FileStorage {
             log.info("파일 저장 완료. path={}", path);
             return storedFilename;
         } catch (IOException e) {
-            throw new FileStorageException(ErrorMessage.FILE_SAVE_FAILED, e);
+            throw new FileStorageException(ErrorCode.FILE_SAVE_FAILED, e);
         }
     }
 
@@ -44,7 +44,7 @@ public class LocalFileStorage implements FileStorage {
         try {
             Files.deleteIfExists(getPath(storedFilename));
         } catch (IOException e) {
-            throw new FileStorageException(ErrorMessage.FILE_DELETE_FAILED, e);
+            throw new FileStorageException(ErrorCode.FILE_DELETE_FAILED, e);
         }
     }
 

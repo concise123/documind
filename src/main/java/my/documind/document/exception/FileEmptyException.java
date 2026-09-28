@@ -1,9 +1,10 @@
 package my.documind.document.exception;
 
-import my.documind.common.exception.ErrorMessage;
+import my.documind.common.exception.BusinessException;
+import my.documind.common.exception.ErrorCode;
 
-public class FileEmptyException extends RuntimeException {
+public class FileEmptyException extends BusinessException {
     public FileEmptyException() {
-        super(ErrorMessage.FILE_EMPTY.getMessage());
+        super(ErrorCode.FILE_EMPTY);
     }
 }
