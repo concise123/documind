@@ -183,6 +183,10 @@
                         question: questionInput.value
                     })
                 });
+                if (response.status === 429) {
+                    alert("질문 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.");
+                    return;
+                }
                 const result = await response.json();
                 answer.textContent = result.answer;
                 qaResult.classList.remove("d-none");

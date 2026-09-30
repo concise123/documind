@@ -33,6 +33,7 @@ public enum ErrorCode {
     OPEN_AI_CONCURRENCY_LIMIT("AI_429_001", "현재 AI 요청이 많습니다. 잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS),
     DAILY_UPLOAD_LIMIT_EXCEEDED("FILE_429_001", "오늘 생성 가능한 문서 수 한도에 도달했습니다.", HttpStatus.TOO_MANY_REQUESTS),
     SUMMARY_RETRY_LIMIT_EXCEEDED("SUMMARY_429_001", "재시도 횟수를 초과했습니다.", HttpStatus.TOO_MANY_REQUESTS),
+    QA_RATE_LIMIT_EXCEEDED("QA_429_001", "잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS),
 
     // 500 내부 서버 오류
     INTERNAL_SERVER_ERROR("COMMON_500_001", "예상치 못한 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),

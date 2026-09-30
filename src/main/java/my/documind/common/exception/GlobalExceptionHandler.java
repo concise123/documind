@@ -8,6 +8,7 @@ import my.documind.document.exception.*;
 import my.documind.pdf.exception.PdfExtractionException;
 import my.documind.pdf.exception.PdfProcessingBusyException;
 import my.documind.storage.exception.FileStorageException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -115,6 +116,12 @@ public class GlobalExceptionHandler {
         log.warn("{} uri={}, method={}", e.getMessage(), request.getRequestURI(), request.getMethod(), e);
         redirectAttributes.addFlashAttribute("message", e.getMessage());
         return "redirect:/document/list";
+    }
+
+    @ExceptionHandler(QaRateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleQaRateLimitExceededException(QaRateLimitExceededException e) {
+        ErrorCode errorCode = ErrorCode.QA_RATE_LIMIT_EXCEEDED;
+        return ResponseEntity.status(errorCode.getStatus()).body(ErrorResponse.of(errorCode));
     }
 
     @ExceptionHandler(Exception.class)
