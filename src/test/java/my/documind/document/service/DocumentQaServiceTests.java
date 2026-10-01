@@ -7,6 +7,7 @@ import my.documind.common.exception.ErrorCode;
 import my.documind.document.dto.DocumentQaResponse;
 import my.documind.document.dto.VectorSearchResult;
 import my.documind.document.exception.DocumentNotFoundException;
+import my.documind.document.redis.QaRateLimiter;
 import my.documind.document.repository.DocumentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,6 +39,9 @@ class DocumentQaServiceTests {
 
     @Mock
     private DocumentRepository documentRepository;
+
+    @Mock
+    private QaRateLimiter qaRateLimiter;
 
     @InjectMocks
     private DocumentQaService documentQaService;
@@ -83,6 +87,9 @@ class DocumentQaServiceTests {
 
         when(qaService.ask(any(), eq(question)))
                 .thenReturn(answer);
+
+        when(qaRateLimiter.isAllowed(email))
+                .thenReturn(true);
 
         // when
         DocumentQaResponse documentQaResponse = documentQaService.ask(documentId, email, question);

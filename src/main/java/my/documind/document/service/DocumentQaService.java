@@ -7,7 +7,9 @@ import my.documind.auth.service.UserService;
 import my.documind.document.dto.DocumentQaResponse;
 import my.documind.document.dto.VectorSearchResult;
 import my.documind.document.exception.DocumentNotFoundException;
+import my.documind.document.exception.QaRateLimitExceededException;
 import my.documind.document.repository.DocumentRepository;
+import my.documind.document.redis.QaRateLimiter;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,9 +23,13 @@ public class DocumentQaService {
     private final RetrievalLogger retrievalLogger;
     private final UserService userService;
     private final DocumentRepository documentRepository;
+    private final QaRateLimiter qaRateLimiter;
 
     public DocumentQaResponse ask(Long documentId, String email, String question) {
         validateDocumentAccess(documentId, email);
+        if (!qaRateLimiter.isAllowed(email)) {
+            throw new QaRateLimitExceededException();
+        }
         List<VectorSearchResult> searchResults = vectorSearchService.search(documentId, question);
         retrievalLogger.log(question, searchResults);
         String content = searchResults.stream()
