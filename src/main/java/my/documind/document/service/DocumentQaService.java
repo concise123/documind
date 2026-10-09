@@ -1,6 +1,7 @@
 package my.documind.document.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import my.documind.ai.service.QaService;
 import my.documind.auth.domain.User;
 import my.documind.auth.service.UserService;
@@ -13,8 +14,10 @@ import my.documind.document.redis.QaRateLimiter;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Log4j2
 @RequiredArgsConstructor
 @Service
 public class DocumentQaService {
@@ -30,13 +33,21 @@ public class DocumentQaService {
         if (!qaRateLimiter.isAllowed(email)) {
             throw new QaRateLimitExceededException();
         }
-        List<VectorSearchResult> searchResults = vectorSearchService.search(documentId, question);
-        retrievalLogger.log(question, searchResults);
-        String content = searchResults.stream()
-                        .map(VectorSearchResult::content)
-                        .collect(Collectors.joining("\n\n"));
-        String answer = qaService.ask(content, question);
-        return new DocumentQaResponse(question, answer);
+        long totalStart = System.nanoTime();
+        String status = "FAILED";
+        try {
+            List<VectorSearchResult> searchResults = vectorSearchService.search(documentId, question);
+            retrievalLogger.log(question, searchResults);
+            String content = searchResults.stream()
+                    .map(VectorSearchResult::content)
+                    .collect(Collectors.joining("\n\n"));
+            String answer = qaService.ask(content, question);
+            status = "SUCCESS";
+            return new DocumentQaResponse(question, answer);
+        } finally {
+            long totalDuration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - totalStart);
+            log.info("RAG QA 시간. status={}, totalDuration={}ms", status, totalDuration);
+        }
     }
 
     private void validateDocumentAccess(Long documentId, String email) {
