@@ -45,6 +45,9 @@ public class OpenAiClient {
 
     public String ask(String context, String question) {
         long start = System.currentTimeMillis();
+        long totalTokens = 0;
+        long inputTokens = 0;
+        long outputTokens = 0;
         try {
             List<OpenAiRequest.Message> messages = List.of(
                     new OpenAiRequest.Message("system", """
@@ -72,10 +75,14 @@ public class OpenAiClient {
                     .body(request)
                     .retrieve()
                     .body(OpenAiResponse.class);
+            totalTokens = response.usage().totalTokens();
+            inputTokens = response.usage().inputTokens();
+            outputTokens = response.usage().outputTokens();
             return response.getContent();
         } finally {
             long duration = System.currentTimeMillis() - start;
-            log.info("OpenAI API 호출 시간. duration={}ms", duration);
+            log.info("OpenAI API 호출 시간 및 사용량. duration={}ms, totalTokens={}, inputTokens={}, outputTokens={}",
+                    duration, totalTokens, inputTokens, outputTokens);
         }
     }
 
