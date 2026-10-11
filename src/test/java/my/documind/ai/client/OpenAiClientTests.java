@@ -44,7 +44,7 @@ class OpenAiClientTests {
                         new OpenAiResponse.Message("assistant", "요약 결과"))
                 ),
                 "gpt-4o-mini",
-                new OpenAiResponse.Usage(10)
+                new OpenAiResponse.Usage(10, 8, 2)
         );
 
         when(restClient.post())
@@ -80,7 +80,7 @@ class OpenAiClientTests {
                         new OpenAiResponse.Message("assistant", "답변"))
                 ),
                 "gpt-4o-mini",
-                new OpenAiResponse.Usage(10)
+                new OpenAiResponse.Usage(10, 8, 2)
         );
 
         when(restClient.post())
