@@ -115,7 +115,7 @@ jobs:
 
           SCRIPT_B64="$(base64 -w 0 deploy/deploy-ec2.sh)"
 
-          REMOTE_COMMAND="set -eu; umask 077; printf '%s' '${SCRIPT_B64}' | base64 -d > /tmp/deploy-documind.sh; chmod 700 /tmp/deploy-documind.sh; trap 'rm -f /tmp/deploy-documind.sh' EXIT; /tmp/deploy-documind.sh '${IMAGE_URI}' '${AWS_REGION}'"
+          REMOTE_COMMAND="set -eu; umask 077; printf '%s' '${SCRIPT_B64}' | base64 -d > /tmp/deploy-documind.sh; sed -i 's/\r$//' /tmp/deploy-documind.sh; chmod 700 /tmp/deploy-documind.sh; trap 'rm -f /tmp/deploy-documind.sh' EXIT; bash /tmp/deploy-documind.sh '${IMAGE_URI}' '${AWS_REGION}'"
 
           jq -n --arg cmd "$REMOTE_COMMAND" \
             '{commands: [$cmd]}' > /tmp/ssm-parameters.json
