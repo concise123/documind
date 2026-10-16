@@ -4,6 +4,7 @@ import my.documind.ai.dto.OpenAiRequest;
 import my.documind.ai.dto.OpenAiResponse;
 import my.documind.ai.dto.SummaryResponse;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -17,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+@Tag("integration")
 @SpringBootTest
 @ActiveProfiles("test")
 class OpenAiClientTests {
