@@ -2,26 +2,57 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-IMAGE_URI="${1:?Usage: deploy-ec2.sh IMAGE_URI AWS_REGION}"
-AWS_REGION="${2:?Usage: deploy-ec2.sh IMAGE_URI AWS_REGION}"
+IMAGE_DIGEST="${1:?Usage: deploy-documind.sh sha256:DIGEST}"
+
+CONFIG_FILE="/etc/documind/deploy.conf"
+
+if [[ ! -f "$CONFIG_FILE" ]]; then
+  echo "Deployment config not found: $CONFIG_FILE" >&2
+  exit 1
+fi
+
+# EC2에 저장된 설정만 사용
+source "$CONFIG_FILE"
+
+if [[ ! "$AWS_ACCOUNT_ID" =~ ^[0-9]{12}$ ]]; then
+  echo "Invalid AWS account ID in deployment config." >&2
+  exit 1
+fi
+
+if [[ ! "$AWS_REGION" =~ ^[a-z0-9-]+$ ]]; then
+  echo "Invalid AWS region in deployment config." >&2
+  exit 1
+fi
+
+if [[ ! "$ECR_REPOSITORY" =~ ^[a-zA-Z0-9._/-]+$ ]]; then
+  echo "Invalid ECR repository in deployment config." >&2
+  exit 1
+fi
+
+if [[ ! "$IMAGE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]; then
+  echo "Invalid image digest." >&2
+  exit 1
+fi
+
+ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+EXPECTED_REPOSITORY="${ECR_REGISTRY}/${ECR_REPOSITORY}"
+IMAGE_URI="${EXPECTED_REPOSITORY}@${IMAGE_DIGEST}"
 
 CONTAINER_NAME="documind"
 PREVIOUS_NAME="documind-previous"
 ENV_FILE="/home/ubuntu/documind.env"
 HEALTH_URL="http://127.0.0.1:8080/login"
 
-echo "Deploying image: ${IMAGE_URI}"
-
 if [[ ! -f "$ENV_FILE" ]]; then
-  echo "Environment file not found: $ENV_FILE"
+  echo "Environment file not found: $ENV_FILE" >&2
   exit 1
 fi
 
-# ECR 로그인
-REGISTRY="${IMAGE_URI%%/*}"
+echo "Deploying image digest: $IMAGE_DIGEST"
 
+# ECR 로그인
 aws ecr get-login-password --region "$AWS_REGION" \
-  | docker login --username AWS --password-stdin "$REGISTRY"
+  | docker login --username AWS --password-stdin "$ECR_REGISTRY"
 
 # 새 이미지 다운로드
 docker pull "$IMAGE_URI"
@@ -47,7 +78,7 @@ if ! docker run -d \
   --env-file "$ENV_FILE" \
   -p 8080:8080 \
   "$IMAGE_URI"; then
-  echo "Failed to start new container."
+  echo "Failed to start new container." >&2
   if docker inspect "$PREVIOUS_NAME" >/dev/null 2>&1; then
     docker rename "$PREVIOUS_NAME" "$CONTAINER_NAME"
     docker start "$CONTAINER_NAME"
@@ -66,7 +97,7 @@ for attempt in $(seq 1 24); do
   sleep 5
 done
 
-echo "Health check failed. Rolling back."
+echo "Health check failed. Rolling back." >&2
 docker logs --tail 100 "$CONTAINER_NAME" || true
 docker rm -f "$CONTAINER_NAME" || true
 
@@ -75,7 +106,7 @@ if docker inspect "$PREVIOUS_NAME" >/dev/null 2>&1; then
   docker start "$CONTAINER_NAME"
   echo "Previous container restarted."
 else
-  echo "No previous container available for rollback."
+  echo "No previous container available for rollback." >&2
 fi
 
 exit 1

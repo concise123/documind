@@ -84,6 +84,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push ARM64 image
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -97,9 +98,7 @@ jobs:
         env:
           AWS_REGION: ${{ vars.AWS_REGION }}
           EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -107,23 +106,16 @@ jobs:
 
           [[ "$AWS_REGION" =~ ^[a-z]{2}(-gov)?-[a-z]+-[0-9]+$ ]]
           [[ "$EC2_INSTANCE_ID" =~ ^i-[0-9a-f]{8,17}$ ]]
-          [[ "$ECR_REPOSITORY" == "documind" ]]
-          [[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]]
-          [[ "$ECR_REGISTRY" =~ ^[0-9]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com(\.cn)?$ ]]
+          [[ "$IMAGE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
 
-          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
-
-          SCRIPT_B64="$(base64 -w 0 deploy/deploy-ec2.sh)"
-
-          REMOTE_COMMAND="set -eu; umask 077; printf '%s' '${SCRIPT_B64}' | base64 -d > /tmp/deploy-documind.sh; sed -i 's/\r$//' /tmp/deploy-documind.sh; chmod 700 /tmp/deploy-documind.sh; trap 'rm -f /tmp/deploy-documind.sh' EXIT; bash /tmp/deploy-documind.sh '${IMAGE_URI}' '${AWS_REGION}'"
-
-          jq -n --arg cmd "$REMOTE_COMMAND" \
-            '{commands: [$cmd]}' > /tmp/ssm-parameters.json
+          jq -n --arg digest "$IMAGE_DIGEST" \
+            '{ImageDigest: [$digest]}' > /tmp/ssm-parameters.json
 
           COMMAND_ID="$(aws ssm send-command \
+            --region "$AWS_REGION" \
             --instance-ids "$EC2_INSTANCE_ID" \
-            --document-name "AWS-RunShellScript" \
-            --comment "Deploy DocuMind ${IMAGE_TAG}" \
+            --document-name "DocuMind-Deploy" \
+            --comment "Deploy DocuMind ${IMAGE_DIGEST}" \
             --parameters file:///tmp/ssm-parameters.json \
             --query 'Command.CommandId' \
             --output text)"
@@ -134,6 +126,7 @@ jobs:
 
           for attempt in $(seq 1 90); do
             STATUS="$(aws ssm get-command-invocation \
+              --region "$AWS_REGION" \
               --command-id "$COMMAND_ID" \
               --instance-id "$EC2_INSTANCE_ID" \
               --query 'Status' \
@@ -143,6 +136,7 @@ jobs:
               Success)
                 echo "Deployment command succeeded."
                 aws ssm get-command-invocation \
+                  --region "$AWS_REGION" \
                   --command-id "$COMMAND_ID" \
                   --instance-id "$EC2_INSTANCE_ID" \
                   --query 'StandardOutputContent' \
@@ -152,6 +146,7 @@ jobs:
               Failed|TimedOut|Cancelled)
                 echo "Deployment command failed: ${STATUS}"
                 aws ssm get-command-invocation \
+                  --region "$AWS_REGION" \
                   --command-id "$COMMAND_ID" \
                   --instance-id "$EC2_INSTANCE_ID" \
                   --query '{stdout:StandardOutputContent,stderr:StandardErrorContent}' \
