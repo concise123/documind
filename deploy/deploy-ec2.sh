@@ -38,6 +38,9 @@ ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 EXPECTED_REPOSITORY="${ECR_REGISTRY}/${ECR_REPOSITORY}"
 IMAGE_URI="${EXPECTED_REPOSITORY}@${IMAGE_DIGEST}"
 
+EXPECTED_IDENTITY="https://github.com/${EXPECTED_GITHUB_REPOSITORY}/${EXPECTED_WORKFLOW}@refs/heads/${EXPECTED_BRANCH}"
+EXPECTED_ISSUER="https://token.actions.githubusercontent.com"
+
 CONTAINER_NAME="documind"
 PREVIOUS_NAME="documind-previous"
 ENV_FILE="/home/ubuntu/documind.env"
@@ -53,6 +56,15 @@ echo "Deploying image digest: $IMAGE_DIGEST"
 # ECR 로그인
 aws ecr get-login-password --region "$AWS_REGION" \
   | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+
+# Cosign 서명 인증
+cosign verify \
+  --certificate-identity="${EXPECTED_IDENTITY}" \
+  --certificate-oidc-issuer="${EXPECTED_ISSUER}" \
+  "${IMAGE_URI}" \
+  >/dev/null
+
+echo "Image signature verified."
 
 # 새 이미지 다운로드
 docker pull "$IMAGE_URI"
