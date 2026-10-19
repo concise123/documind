@@ -17,7 +17,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 75
 
     steps:
       - name: Checkout
@@ -94,10 +94,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Deploy through SSM
+      - name: Deploy through SSM Automation
         env:
           AWS_REGION: ${{ vars.AWS_REGION }}
-          EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+          AUTOMATION_ROLE_ARN: ${{ vars.AUTOMATION_ROLE_ARN }}
           IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
         shell: bash
         run: |
@@ -105,52 +105,63 @@ jobs:
           umask 077
 
           [[ "$AWS_REGION" =~ ^[a-z]{2}(-gov)?-[a-z]+-[0-9]+$ ]]
-          [[ "$EC2_INSTANCE_ID" =~ ^i-[0-9a-f]{8,17}$ ]]
+          [[ "$AUTOMATION_ROLE_ARN" =~ ^arn:aws:iam::[0-9]{12}:role/DocuMindAutomationRole$ ]]
           [[ "$IMAGE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
 
-          jq -n --arg digest "$IMAGE_DIGEST" \
-            '{ImageDigest: [$digest]}' > /tmp/ssm-parameters.json
+          PARAMETERS_FILE="$(mktemp)"
+          trap 'rm -f "$PARAMETERS_FILE"' EXIT
 
-          COMMAND_ID="$(aws ssm send-command \
+          jq -n \
+            --arg digest "$IMAGE_DIGEST" \
+            --arg role "$AUTOMATION_ROLE_ARN" \
+            '{
+              ImageDigest: [$digest],
+              AutomationAssumeRole: [$role]
+            }' > "$PARAMETERS_FILE"
+
+          AUTOMATION_ID="$(aws ssm start-automation-execution \
             --region "$AWS_REGION" \
-            --instance-ids "$EC2_INSTANCE_ID" \
-            --document-name "DocuMind-Deploy" \
-            --comment "Deploy DocuMind ${IMAGE_DIGEST}" \
-            --parameters file:///tmp/ssm-parameters.json \
-            --query 'Command.CommandId' \
+            --document-name "DocuMind-Deploy-With-Approval" \
+            --parameters "file://${PARAMETERS_FILE}" \
+            --query 'AutomationExecutionId' \
             --output text)"
 
-          echo "SSM command submitted: ${COMMAND_ID}"
+          [[ "$AUTOMATION_ID" =~ ^[a-fA-F0-9-]{36}$ ]]
+
+          echo "Automation execution started: ${AUTOMATION_ID}"
+          echo "Waiting for approval and deployment completion."
 
           STATUS="Pending"
+          PREVIOUS_STATUS=""
 
-          for attempt in $(seq 1 90); do
-            STATUS="$(aws ssm get-command-invocation \
+          # 최대 65분 대기: 승인 제한 시간 60분 + 여유 시간
+          for attempt in $(seq 1 780); do
+            STATUS="$(aws ssm get-automation-execution \
               --region "$AWS_REGION" \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$EC2_INSTANCE_ID" \
-              --query 'Status' \
-              --output text 2>/dev/null || true)"
+              --automation-execution-id "$AUTOMATION_ID" \
+              --query 'AutomationExecution.AutomationExecutionStatus' \
+              --output text)"
+
+            if [[ "$STATUS" != "$PREVIOUS_STATUS" ]]; then
+              echo "Automation status: ${STATUS}"
+              PREVIOUS_STATUS="$STATUS"
+            fi
 
             case "$STATUS" in
-              Success)
-                echo "Deployment command succeeded."
-                aws ssm get-command-invocation \
-                  --region "$AWS_REGION" \
-                  --command-id "$COMMAND_ID" \
-                  --instance-id "$EC2_INSTANCE_ID" \
-                  --query 'StandardOutputContent' \
-                  --output text
+              Success|CompletedWithSuccess)
+                echo "Deployment completed successfully."
                 exit 0
                 ;;
-              Failed|TimedOut|Cancelled)
-                echo "Deployment command failed: ${STATUS}"
-                aws ssm get-command-invocation \
+
+              Failed|TimedOut|Cancelled|Rejected|CompletedWithFailure|Exited|ChangeCalendarOverrideRejected)
+                echo "Automation failed: ${STATUS}" >&2
+
+                aws ssm get-automation-execution \
                   --region "$AWS_REGION" \
-                  --command-id "$COMMAND_ID" \
-                  --instance-id "$EC2_INSTANCE_ID" \
-                  --query '{stdout:StandardOutputContent,stderr:StandardErrorContent}' \
+                  --automation-execution-id "$AUTOMATION_ID" \
+                  --query 'AutomationExecution.{Status:AutomationExecutionStatus,FailureMessage:FailureMessage,StepExecutions:StepExecutions[*].{Step:StepName,Status:StepStatus,FailureMessage:FailureMessage}}' \
                   --output json || true
+
                 exit 1
                 ;;
             esac
@@ -158,5 +169,6 @@ jobs:
             sleep 5
           done
 
-          echo "Timed out waiting for SSM. Last status: ${STATUS}"
+          echo "Timed out waiting for approval or deployment." >&2
+          echo "Automation execution: ${AUTOMATION_ID}" >&2
           exit 1
