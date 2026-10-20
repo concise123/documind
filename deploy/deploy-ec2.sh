@@ -89,7 +89,7 @@ wait_for_health() {
     if curl --connect-timeout 2 --max-time 5 \
       -fsS "$HEALTH_URL" >/dev/null; then
       echo "Application health check passed."
-      exit 0
+      return 0
     fi
 
     sleep 5
