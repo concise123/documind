@@ -53,16 +53,28 @@ fi
 
 echo "Deploying image digest: $IMAGE_DIGEST"
 
-# ECR 로그인
+# 인증 정보를 저장할 임시 디렉터리 생성
+AUTH_DIR="$(mktemp -d)"
+chmod 700 "$AUTH_DIR"
+
+# 스크립트 종료 시 임시 인증 정보 삭제
+cleanup() {
+  rm -rf "$AUTH_DIR"
+}
+trap cleanup EXIT
+
+# Docker와 Cosign이 동일한 임시 인증 설정을 사용하도록 지정
+export DOCKER_CONFIG="$AUTH_DIR"
+
+# 임시 Docker 설정에 ECR 인증 정보 저장
 aws ecr get-login-password --region "$AWS_REGION" \
   | docker login --username AWS --password-stdin "$ECR_REGISTRY"
 
-# Cosign 서명 인증
+# Cosign 서명 검증
 cosign verify \
-  --certificate-identity="${EXPECTED_IDENTITY}" \
-  --certificate-oidc-issuer="${EXPECTED_ISSUER}" \
-  "${IMAGE_URI}" \
-  >/dev/null
+  --certificate-identity="$EXPECTED_IDENTITY" \
+  --certificate-oidc-issuer="$EXPECTED_ISSUER" \
+  "$IMAGE_URI"
 
 echo "Image signature verified."
 
