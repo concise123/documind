@@ -81,21 +81,99 @@ echo "Image signature verified."
 # 새 이미지 다운로드
 docker pull "$IMAGE_URI"
 
-# 이전 배포가 중단된 상태라면 기존 컨테이너 복구
-if ! docker inspect "$CONTAINER_NAME" >/dev/null 2>&1 \
-   && docker inspect "$PREVIOUS_NAME" >/dev/null 2>&1; then
-  docker rename "$PREVIOUS_NAME" "$CONTAINER_NAME"
-  docker start "$CONTAINER_NAME"
+# 헬스 체크: 최대 약 2분 동안 응답 확인
+wait_for_health() {
+  local attempt
+
+  for attempt in $(seq 1 24); do
+    if curl --connect-timeout 2 --max-time 5 \
+      -fsS "$HEALTH_URL" >/dev/null; then
+      echo "Application health check passed."
+      exit 0
+    fi
+
+    sleep 5
+  done
+
+  return 1
+}
+
+# 이전 컨테이너 복구 및 정상 응답 확인
+rollback_previous_container() {
+  echo "Attempting to restore previous container."
+
+  if ! docker inspect "$PREVIOUS_NAME" >/dev/null 2>&1; then
+    echo "No previous container available for rollback." >&2
+    return 1
+  fi
+
+  if docker inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
+    if ! docker rm -f "$CONTAINER_NAME" >/dev/null; then
+      echo "Failed to remove failed container." >&2
+      return 1
+    fi
+  fi
+
+  if ! docker rename "$PREVIOUS_NAME" "$CONTAINER_NAME"; then
+    echo "Failed to rename previous container." >&2
+    return 1
+  fi
+
+  if ! docker start "$CONTAINER_NAME"; then
+    echo "Failed to start previous container." >&2
+    return 1
+  fi
+
+  if ! wait_for_health; then
+    echo "Previous container started but health check failed." >&2
+    docker logs --tail 100 "$CONTAINER_NAME" >&2 || true
+    return 1
+  fi
+
+  echo "Previous container restored and health check passed."
+}
+
+# 현재 컨테이너가 없어도 이전 컨테이너를 롤백 후보로 보존
+if ! docker inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
+  if docker inspect "$PREVIOUS_NAME" >/dev/null 2>&1; then
+    echo "Current container is missing. Previous container retained for rollback."
+  fi
 fi
 
-# 기존 컨테이너 보존 후 중지
+# 현재 컨테이너 보존
 if docker inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
-  docker rm -f "$PREVIOUS_NAME" >/dev/null 2>&1 || true
-  docker stop "$CONTAINER_NAME"
-  docker rename "$CONTAINER_NAME" "$PREVIOUS_NAME"
+  # 현재 컨테이너를 먼저 중지
+  if ! docker stop "$CONTAINER_NAME"; then
+    echo "Failed to stop current container." >&2
+    exit 1
+  fi
+
+  # 이전 배포의 오래된 백업은 현재 컨테이너가 중지된 뒤 정리
+  if docker inspect "$PREVIOUS_NAME" >/dev/null 2>&1; then
+    if ! docker rm -f "$PREVIOUS_NAME" >/dev/null; then
+      echo "Failed to remove stale previous container." >&2
+
+      if ! docker start "$CONTAINER_NAME"; then
+        echo "Failed to restart current container. Manual recovery required." >&2
+      fi
+
+      exit 1
+    fi
+  fi
+
+  # 현재 컨테이너를 롤백용으로 보존
+  if ! docker rename "$CONTAINER_NAME" "$PREVIOUS_NAME"; then
+    echo "Failed to preserve current container." >&2
+
+    if ! docker start "$CONTAINER_NAME"; then
+      echo "Failed to restart current container. Manual recovery required." >&2
+    fi
+
+    exit 1
+  fi
 fi
 
-# 새 컨테이너 실행
+# 신규 컨테이너 실행
 if ! docker run -d \
   --name "$CONTAINER_NAME" \
   --restart unless-stopped \
@@ -103,34 +181,34 @@ if ! docker run -d \
   -p 8080:8080 \
   "$IMAGE_URI"; then
   echo "Failed to start new container." >&2
-  if docker inspect "$PREVIOUS_NAME" >/dev/null 2>&1; then
-    docker rename "$PREVIOUS_NAME" "$CONTAINER_NAME"
-    docker start "$CONTAINER_NAME"
+
+  if ! rollback_previous_container; then
+    echo "Automatic rollback failed. Manual recovery required." >&2
   fi
+
   exit 1
 fi
 
-# 최대 약 2분 동안 로그인 페이지 응답 확인
-for attempt in $(seq 1 24); do
-  if curl -fsS "$HEALTH_URL" >/dev/null; then
-    echo "Application health check passed."
-    docker rm -f "$PREVIOUS_NAME" >/dev/null 2>&1 || true
-    exit 0
+# 신규 애플리케이션 헬스 체크
+if wait_for_health; then
+  echo "Application health check passed."
+
+  # 신규 버전이 정상 응답한 뒤 이전 컨테이너 정리
+  if docker inspect "$PREVIOUS_NAME" >/dev/null 2>&1; then
+    if ! docker rm "$PREVIOUS_NAME" >/dev/null; then
+      echo "WARNING: Deployment succeeded, but previous container cleanup failed." >&2
+    fi
   fi
 
-  sleep 5
-done
+  exit 0
+fi
 
+# 헬스 체크 실패: 로그 확인 후 롤백
 echo "Health check failed. Rolling back." >&2
-docker logs --tail 100 "$CONTAINER_NAME" || true
-docker rm -f "$CONTAINER_NAME" || true
+docker logs --tail 100 "$CONTAINER_NAME" >&2 || true
 
-if docker inspect "$PREVIOUS_NAME" >/dev/null 2>&1; then
-  docker rename "$PREVIOUS_NAME" "$CONTAINER_NAME"
-  docker start "$CONTAINER_NAME"
-  echo "Previous container restarted."
-else
-  echo "No previous container available for rollback." >&2
+if ! rollback_previous_container; then
+  echo "Automatic rollback failed. Manual recovery required." >&2
 fi
 
 exit 1
