@@ -191,7 +191,6 @@ fi
 
 # 신규 애플리케이션 헬스 체크
 if wait_for_health; then
-  echo "Application health check passed."
 
   # 신규 버전이 정상 응답한 뒤 이전 컨테이너 정리
   if docker inspect "$PREVIOUS_NAME" >/dev/null 2>&1; then
