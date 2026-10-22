@@ -178,7 +178,7 @@ if ! docker run -d \
   --name "$CONTAINER_NAME" \
   --restart unless-stopped \
   --env-file "$ENV_FILE" \
-  -p 8080:8080 \
+  -p 127.0.0.1:8080:8080 \
   "$IMAGE_URI"; then
   echo "Failed to start new container." >&2
 
