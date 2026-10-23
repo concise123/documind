@@ -51,25 +51,27 @@
                             <!-- UPLOADED -->
                             <div th:if="${document.status.name() == 'UPLOADED'}" class="content-panel text-center">
                                 <div class="mt-3">
-                                    <p>요약 생성이 아직 시작되지 않았거나 대기 상태입니다.<br>
-                                        필요 시 '요약 생성' 버튼을 눌러 수동으로 시작할 수 있습니다.</p>
+                                    <p>요약 생성이 아직 시작되지 않았거나 대기 상태입니다. 잠시 후 새로고침하여 결과를 확인하세요.</p>
                                 </div>
-                                <form id="startSummaryForm"
-                                      th:action="@{/document/summary/start/{id}(id=${document.id})}" method="post">
-                                    <button class="btn btn-outline-secondary btn-sm" type="submit">요약 생성</button>
-                                    <div class="loading-indicator d-none align-items-center justify-content-center">
-                                        <div class="spinner-border spinner-border-sm me-2" role="status"
-                                             aria-hidden="true"></div>
-                                        <span>요청 중...</span>
-                                    </div>
-                                </form>
+                                <div class="d-flex gap-2 align-items-center justify-content-center">
+                                    <button class="btn btn-outline-primary btn-sm refresh-button" onclick="location.reload()">새로고침</button>
+                                    <form id="startSummaryForm"
+                                          th:action="@{/document/summary/start/{id}(id=${document.id})}" method="post">
+                                        <button class="btn btn-outline-secondary btn-sm" type="submit">요약 생성</button>
+                                        <div class="loading-indicator d-none align-items-center justify-content-center">
+                                            <div class="spinner-border spinner-border-sm me-2" role="status"
+                                                 aria-hidden="true"></div>
+                                            <span>요청 중...</span>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                             <!-- PROCESSING -->
                             <div th:if="${document.status.name() == 'PROCESSING'}" class="content-panel text-center">
                                 <div class="mt-3">
                                     <p>AI 요약 생성 중입니다. 잠시 후 새로고침하여 결과를 확인하세요.</p>
                                 </div>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="location.reload()">새로고침</button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="location.reload()">새로고침</button>
                             </div>
                             <!-- COMPLETED -->
                             <div th:if="${document.status.name() == 'COMPLETED'}" class="content-panel">
@@ -151,11 +153,19 @@
         loading.classList.add("d-none");
     }
 
-    function showLoadingOnSubmit(form) {
+    function showLoadingOnSubmit(form, confirmMessage = null) {
         if (!form) {
             return;
         }
-        form.addEventListener("submit", () => {
+        form.addEventListener("submit", (event) => {
+            if (confirmMessage && !confirm(confirmMessage)) {
+                event.preventDefault();
+                return;
+            }
+            const refreshButton = document.querySelector('.refresh-button');
+            if (refreshButton) {
+                refreshButton.classList.add("d-none");
+            }
             showLoading(form);
         });
     }
@@ -199,7 +209,7 @@
         });
     }
 
-    showLoadingOnSubmit(document.querySelector('#startSummaryForm'));
+    showLoadingOnSubmit(document.querySelector('#startSummaryForm'), '자동 처리가 진행되지 않는 경우에만 요청해 주세요. 수동으로 요약을 생성할까요?');
     showLoadingOnSubmit(document.querySelector('#retrySummaryForm'));
     initQaForm();
 </script>
