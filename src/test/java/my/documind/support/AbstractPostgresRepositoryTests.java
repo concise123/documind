@@ -8,7 +8,7 @@ import org.testcontainers.junit.jupiter.Container;
 public abstract class AbstractPostgresRepositoryTests {
     @Container
     static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:16")
+            new PostgreSQLContainer<>("pgvector/pgvector:0.8.5-pg18")
                     .withDatabaseName("testdb")
                     .withUsername("sa")
                     .withPassword("sa");
